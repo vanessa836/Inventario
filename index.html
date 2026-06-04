@@ -9355,6 +9355,12 @@ function renderTeams() {
     if (!teamMap[a.team]) teamMap[a.team] = { team: a.team, leader: a.leader, assets: [], geral: [] };
     teamMap[a.team].assets.push(a);
   });
+  // Inclui equipes do registro que ainda não têm equipamento
+  (DB.teams||[]).forEach(function(ti){
+    if (ti && ti.name && ti.name !== 'Geral' && !teamMap[ti.name]) {
+      teamMap[ti.name] = { team: ti.name, leader: ti.supervisor || '—', assets: [], geral: [] };
+    }
+  });
 
   // For each team, find its Geral items by matching leader — done at display time only
   function findGeralForTeam(team, leader) {
@@ -9409,12 +9415,18 @@ function renderTeams() {
     const geralBadge = t.geral.length > 0
       ? ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 6px;border-radius:10px;font-weight:500">+Geral</span>'
       : '';
+    const _ti = (DB.teams||[]).find(function(x){return x.name===t.team;}) || {};
+    const codeBadge = _ti.code ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 7px;border-radius:10px;font-weight:600">' + esc(_ti.code) + '</span>' : '';
+    const sup = totalItems > 0 ? t.leader : (_ti.supervisor || t.leader || '—');
+    const noteLine = _ti.note ? '<div style="font-size:11px;color:var(--amber);margin-top:2px">' + esc(_ti.note) + '</div>' : '';
+    const emptyLine = totalItems === 0 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px">Sem equipamento</div>' : '';
     return '<div class="team-card" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
-      + '<div class="team-card-name">' + esc(t.team) + geralBadge + '</div>'
-      + '<div class="team-card-leader">Supervisor: <span>' + esc(t.leader) + '</span></div>'
+      + '<div class="team-card-name">' + esc(t.team) + codeBadge + geralBadge + '</div>'
+      + '<div class="team-card-leader">Supervisor: <span>' + esc(sup) + '</span></div>'
+      + noteLine
       + '<div class="team-card-pills">'
       + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
-      + '</div></div>';
+      + '</div>' + emptyLine + '</div>';
   }).join('') || '<p style="color:var(--text3);font-size:13px">Nenhum resultado.</p>';
 }
 
@@ -10060,7 +10072,7 @@ function openEditPopup(cod) {
   document.getElementById('ep-title').textContent = isNew ? 'Novo item' : 'Editar — ' + cod;
   document.getElementById('ep-sub').textContent   = isNew ? 'Preencha os dados do novo equipamento' : (asset ? asset.type + ' · ' + asset.model : '');
 
-  const teams   = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[])].filter(Boolean))].sort();
+  const teams   = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[]), ...((DB.teams||[]).map(function(t){return t.name;}))].filter(Boolean))].sort();
   const leaders = [...new Set([...DB.assets.map(a => a.leader), ...(DB.extraSupervisors||[])].filter(Boolean))].sort();
   const states  = ['FL','GA','IL','IN','MN','NC','NJ','NY','OH','SC','TN','TX','WI'];
   const types   = [...new Set(DB.assets.map(a => a.type).filter(Boolean))].sort();
@@ -10277,8 +10289,18 @@ function openAddPerson(kind) {
   nome = nome.trim();
   if (!nome) return;
   var field = _fieldOf(kind);
-  var existe = DB.assets.some(function(a){ return (a[field]||'') === nome; }) || _extraList(kind).indexOf(nome) >= 0;
-  if (existe) { alert('"' + nome + '" já existe.'); return; }
+  var existe = DB.assets.some(function(a){ return (a[field]||'') === nome; });
+  if (kind === 'team') {
+    if (existe || teamEntry(nome)) { alert('"' + nome + '" já existe.'); return; }
+    var code = (prompt('Código da equipe (ex: PC-08) — opcional:') || '').trim();
+    var sup  = (prompt('Supervisor da equipe — opcional:') || '').trim();
+    var note = (prompt('Observação (ex: não usa equipamento) — opcional:') || '').trim();
+    teamReg().push({ name: nome, code: code, supervisor: sup, note: note });
+    saveData(); pushTeams(); renderPessoas(); try{ renderTeams(); }catch(e){}
+    alert('✅ Equipe "' + nome + '" adicionada.');
+    return;
+  }
+  if (existe || _extraList(kind).indexOf(nome) >= 0) { alert('"' + nome + '" já existe.'); return; }
   _extraList(kind).push(nome);
   saveData();
   renderPessoas();
@@ -10286,6 +10308,22 @@ function openAddPerson(kind) {
 }
 
 function editPerson(kind, oldName) {
+  if (kind === 'team') {
+    var e = teamEntry(oldName) || { name: oldName, code:'', supervisor:'', note:'' };
+    var nm = prompt('Nome da equipe:', oldName); if (nm === null) return; nm = nm.trim(); if (!nm) return;
+    var code = (prompt('Código (ex: PC-08):', e.code || '') || '').trim();
+    var sup  = (prompt('Supervisor:', e.supervisor || '') || '').trim();
+    var note = (prompt('Observação:', e.note || '') || '').trim();
+    var n = 0;
+    if (nm !== oldName) { DB.assets.forEach(function(a){ if (a.team === oldName) { a.team = nm; n++; } }); }
+    if (sup) { DB.assets.forEach(function(a){ if (a.team === nm) { a.leader = sup; } }); }
+    var reg = teamEntry(oldName);
+    if (reg) { reg.name = nm; reg.code = code; reg.supervisor = sup; reg.note = note; }
+    else { teamReg().push({ name: nm, code: code, supervisor: sup, note: note }); }
+    saveData(); pushTeams(); renderPessoas(); try{ renderTeams(); }catch(e2){}
+    alert('✅ Equipe atualizada' + (n ? ' (' + n + ' equipamentos)' : '') + '.');
+    return;
+  }
   var novo = prompt('Renomear "' + oldName + '" para:', oldName);
   if (novo === null) return;
   novo = novo.trim();
@@ -10308,6 +10346,7 @@ function deletePerson(kind, name) {
     if (!confirm('Remover "' + name + '"?')) return;
   }
   var ex = _extraList(kind), i = ex.indexOf(name); if (i >= 0) ex.splice(i, 1);
+  if (kind === 'team') { var tr = teamReg(); var ti = tr.findIndex(function(t){ return t.name === name; }); if (ti >= 0) tr.splice(ti, 1); pushTeams(); }
   saveData();
   renderPessoas(); rerenderAll();
   alert('🗑 "' + name + '" removido.');
@@ -10674,7 +10713,7 @@ function renderPessoas() {
   }
 
   // Teams
-  const teams = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[])].filter(Boolean))].sort();
+  const teams = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[]), ...((DB.teams||[]).map(function(t){return t.name;}))].filter(Boolean))].sort();
   const teamList = document.getElementById('team-list');
   if (teamList) {
     teamList.innerHTML = '';
@@ -10772,6 +10811,7 @@ async function cloudPull(opts) {
   opts = opts || {};
   const r = await cloudCall({ action: 'pull' });
   if (!r || !r.ok) return r;
+  if (Array.isArray(r.teams)) DB.teams = r.teams;
   const data = r.data || { assets: [], inventory: [], history: [] };
   const cloudEmpty = !(data.assets && data.assets.length);
   if (cloudEmpty && opts.seedIfEmpty) {
@@ -10789,6 +10829,15 @@ async function cloudPull(opts) {
     _cloudSnapshot = _deepClone(DB);
   }
   return r;
+}
+
+// ===== REGISTRO DE EQUIPES (código, supervisor, observação — mesmo sem equipamento) =====
+function teamReg(){ DB.teams = DB.teams || []; return DB.teams; }
+function teamEntry(name){ return teamReg().find(function(t){ return t.name === name; }); }
+function teamCode(name){ var e = teamEntry(name); return e && e.code ? e.code : ''; }
+async function pushTeams(){
+  if(!_cloudOn) return;
+  try { await cloudCall({ action:'setTeams', teams: teamReg() }); } catch(e){}
 }
 
 // Importa os dados do inventário do Excel (uma única vez), mesclando por código.
