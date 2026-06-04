@@ -8875,12 +8875,30 @@ function normalizeData(d) {
   });
   return changed;
 }
+// Mantém datas só como MM/DD/AAAA (o Google Sheets devolve datas no formato comprido)
+function _fmtDateStr(v) {
+  if (v == null) return v;
+  var s = String(v);
+  if (s.indexOf('GMT') < 0 && !/^\w{3} \w{3} \d{2} \d{4}/.test(s)) return v;
+  var dt = new Date(s);
+  if (isNaN(dt.getTime())) return v;
+  return ('0'+(dt.getMonth()+1)).slice(-2) + '/' + ('0'+dt.getDate()).slice(-2) + '/' + dt.getFullYear();
+}
+function normalizeDates(d) {
+  if (!d) return false;
+  var changed = false;
+  var invF = ['registration','insurance','dt_compra','inspecao','due_date','done_date'];
+  (d.inventory || []).forEach(function(o){ invF.forEach(function(f){ if (f in o) { var nv = _fmtDateStr(o[f]); if (nv !== o[f]) { o[f] = nv; changed = true; } } }); });
+  (d.assets || []).forEach(function(o){ ['due_date','done_date'].forEach(function(f){ if (f in o) { var nv = _fmtDateStr(o[f]); if (nv !== o[f]) { o[f] = nv; changed = true; } } }); });
+  return changed;
+}
 function loadData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (normalizeData(parsed)) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      var _c1 = normalizeData(parsed), _c2 = normalizeDates(parsed);
+      if (_c1 || _c2) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       return parsed;
     }
     const fresh = JSON.parse(JSON.stringify(RAW));
@@ -10293,9 +10311,7 @@ function openAddPerson(kind) {
   if (kind === 'team') {
     if (existe || teamEntry(nome)) { alert('"' + nome + '" já existe.'); return; }
     var code = (prompt('Código da equipe (ex: PC-08) — opcional:') || '').trim();
-    var sup  = (prompt('Supervisor da equipe — opcional:') || '').trim();
-    var note = (prompt('Observação (ex: não usa equipamento) — opcional:') || '').trim();
-    teamReg().push({ name: nome, code: code, supervisor: sup, note: note });
+    teamReg().push({ name: nome, code: code, supervisor: '', note: '' });
     saveData(); pushTeams(); renderPessoas(); try{ renderTeams(); }catch(e){}
     alert('✅ Equipe "' + nome + '" adicionada.');
     return;
@@ -10312,14 +10328,11 @@ function editPerson(kind, oldName) {
     var e = teamEntry(oldName) || { name: oldName, code:'', supervisor:'', note:'' };
     var nm = prompt('Nome da equipe:', oldName); if (nm === null) return; nm = nm.trim(); if (!nm) return;
     var code = (prompt('Código (ex: PC-08):', e.code || '') || '').trim();
-    var sup  = (prompt('Supervisor:', e.supervisor || '') || '').trim();
-    var note = (prompt('Observação:', e.note || '') || '').trim();
     var n = 0;
     if (nm !== oldName) { DB.assets.forEach(function(a){ if (a.team === oldName) { a.team = nm; n++; } }); }
-    if (sup) { DB.assets.forEach(function(a){ if (a.team === nm) { a.leader = sup; } }); }
     var reg = teamEntry(oldName);
-    if (reg) { reg.name = nm; reg.code = code; reg.supervisor = sup; reg.note = note; }
-    else { teamReg().push({ name: nm, code: code, supervisor: sup, note: note }); }
+    if (reg) { reg.name = nm; reg.code = code; }
+    else { teamReg().push({ name: nm, code: code, supervisor: '', note: '' }); }
     saveData(); pushTeams(); renderPessoas(); try{ renderTeams(); }catch(e2){}
     alert('✅ Equipe atualizada' + (n ? ' (' + n + ' equipamentos)' : '') + '.');
     return;
@@ -10719,11 +10732,10 @@ function renderPessoas() {
     teamList.innerHTML = '';
     teams.forEach(function(t) {
       const count = DB.assets.filter(a => a.team === t).length;
-      const leader = (DB.assets.find(a => a.team === t) || {}).leader || '—';
+      const _tc = teamCode(t);
       const row = document.createElement('div');
       row.className = 'person-row';
-      row.innerHTML = '<div style="flex:1"><div class="person-name">' + esc(t) + '</div>'
-        + '<div style="font-size:11px;color:var(--text3)">Supervisor: ' + esc(leader) + '</div></div>'
+      row.innerHTML = '<div style="flex:1"><div class="person-name">' + esc(t) + (_tc ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 6px;border-radius:10px;font-weight:600">' + esc(_tc) + '</span>' : '') + '</div></div>'
         + '<span class="person-count">' + count + ' itens</span>'
         + '<div class="person-btns">'
         + '<button class="icon-btn" style="font-size:11px">✏ Editar</button>'
@@ -10738,7 +10750,8 @@ function renderPessoas() {
   }
 
   // Drivers
-  const drivers = [...new Set([...DB.assets.map(a => a.driver), ...(DB.extraDrivers||[])].filter(Boolean).filter(d => d !== 'N/A' && d !== ''))].sort();
+  const _badDriver = ['FALTA','N/A','NA','SEM','-','—',''];
+  const drivers = [...new Set([...DB.assets.map(a => a.driver), ...(DB.extraDrivers||[])].filter(Boolean).filter(function(d){ return _badDriver.indexOf(String(d).trim().toUpperCase()) < 0; }))].sort();
   const driverList = document.getElementById('driver-list');
   if (driverList) {
     driverList.innerHTML = '';
@@ -10822,6 +10835,7 @@ async function cloudPull(opts) {
     DB.assets = data.assets || []; DB.inventory = data.inventory || []; DB.history = data.history || [];
     _cloudSnapshot = _deepClone(DB);            // snapshot = nuvem como veio
     var _fixed = normalizeData(DB);             // corrige typos localmente
+    if (normalizeDates(DB)) _fixed = true;      // formata datas como MM/DD/AAAA
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch (e) {}
     rerenderAll();
     if (_fixed && _cloudOn) cloudPush();        // empurra a correção pra nuvem
