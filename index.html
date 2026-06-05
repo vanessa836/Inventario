@@ -8890,6 +8890,7 @@ function normalizeDates(d) {
   var invF = ['registration','insurance','dt_compra','inspecao','due_date','done_date'];
   (d.inventory || []).forEach(function(o){ invF.forEach(function(f){ if (f in o) { var nv = _fmtDateStr(o[f]); if (nv !== o[f]) { o[f] = nv; changed = true; } } }); });
   (d.assets || []).forEach(function(o){ ['due_date','done_date'].forEach(function(f){ if (f in o) { var nv = _fmtDateStr(o[f]); if (nv !== o[f]) { o[f] = nv; changed = true; } } }); });
+  (d.history || []).forEach(function(o){ ['date'].forEach(function(f){ if (f in o) { var nv = _fmtDateStr(o[f]); if (nv !== o[f]) { o[f] = nv; changed = true; } } }); });
   return changed;
 }
 function loadData() {
