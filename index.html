@@ -548,7 +548,7 @@ tr.row-pend:hover td{background:#fef9ec}
 
   <div class="tbl-wrap">
     <div class="tbl-header" style="flex-wrap:wrap;gap:8px">
-      <input type="text" id="asset-search" placeholder="Buscar por código, placa, modelo, equipe..." oninput="renderAssets()" style="min-width:200px">
+      <input type="text" id="asset-search" placeholder="Buscar por código, placa, modelo, equipe..." oninput="renderAssets()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" style="min-width:200px">
       <select id="asset-type-filter" onchange="renderAssets()"><option value="">Todos os tipos</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option></select>
       <select id="asset-leader-filter" onchange="renderAssets()"><option value="">Todos os supervisores</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="Joao Felipe Donato de Souza">Joao Felipe Donato de Souza</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="Joao Felipe Donato de Souza">Joao Felipe Donato de Souza</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="Joao Felipe Donato de Souza">Joao Felipe Donato de Souza</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="Joao Felipe Donato de Souza">Joao Felipe Donato de Souza</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option></select>
       <select id="asset-state-filter" onchange="renderAssets()"><option value="">Todos os estados</option><option value="FL">FL</option><option value="MN">MN</option><option value="NY">NY</option><option value="OH">OH</option><option value="SC">SC</option><option value="WI">WI</option><option value="FL">FL</option><option value="MN">MN</option><option value="NY">NY</option><option value="OH">OH</option><option value="SC">SC</option><option value="WI">WI</option><option value="FL">FL</option><option value="MN">MN</option><option value="NY">NY</option><option value="OH">OH</option><option value="SC">SC</option><option value="WI">WI</option><option value="FL">FL</option><option value="MN">MN</option><option value="NY">NY</option><option value="OH">OH</option><option value="SC">SC</option><option value="WI">WI</option><option value="FL">FL</option><option value="MN">MN</option><option value="NY">NY</option><option value="OH">OH</option><option value="SC">SC</option><option value="WI">WI</option></select>
@@ -573,7 +573,7 @@ tr.row-pend:hover td{background:#fef9ec}
 <div id="page-inventory" class="page">
   <div class="tbl-wrap">
     <div class="tbl-header">
-      <input type="text" id="inv-search" placeholder="Buscar inventário..." oninput="renderInventory()">
+      <input type="text" id="inv-search" placeholder="Buscar inventário..." oninput="renderInventory()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
       <select id="inv-type-filter" onchange="renderInventory()"><option value="">Todos os tipos</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option></select>
       <select id="inv-alert-filter" onchange="renderInventory()">
         <option value="">Todos</option>
@@ -594,7 +594,7 @@ tr.row-pend:hover td{background:#fef9ec}
 <div id="page-history" class="page">
   <div class="tbl-wrap">
     <div class="tbl-header">
-      <input type="text" id="hist-search" placeholder="Buscar por código, equipe..." oninput="renderHistory()">
+      <input type="text" id="hist-search" placeholder="Buscar por código, equipe..." oninput="renderHistory()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')">
       <span class="count" id="hist-count">66 registros</span>
       <button class="icon-btn" onclick="openNewHistory()">+ Nova movimentação</button>
     </div>
@@ -1141,7 +1141,7 @@ tr.row-pend:hover td{background:#fef9ec}
       <div style="font-size:12px;color:var(--text3);margin-top:2px">Clique em um team para ver os assets e o supervisor</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="text" id="teams-search" placeholder="Buscar..." oninput="renderTeams()" autocomplete="off" autocorrect="off" name="teams-search-nofill" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;width:160px">
+      <input type="text" id="teams-search" placeholder="Buscar..." oninput="renderTeams()" autocomplete="off" autocorrect="off" readonly onfocus="this.removeAttribute('readonly')" name="teams-search-nofill" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;width:160px">
       <select id="supervisor-select" onchange="filterBySupervisor()" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;cursor:pointer;min-width:180px" fdprocessedid="ey1of"><option value="">Todos os supervisores</option><option value="Apopka">Apopka</option><option value="Carlos Silva">Carlos Silva</option><option value="Deneer Ostaiza da Silva">Deneer Ostaiza da Silva</option><option value="Drivers">Drivers</option><option value="Felipe Resende">Felipe Resende</option><option value="Gustavo Martinez">Gustavo Martinez</option><option value="João Felipe Donato de Sousa">João Felipe Donato de Sousa</option><option value="Pendente">Pendente</option><option value="Renato Fusari">Renato Fusari</option><option value="Wagner Lenlei Jr">Wagner Lenlei Jr</option><option value="Walter Vecchi">Walter Vecchi</option></select>
       <div style="position:relative;display:inline-block">
         <button id="team-picker-btn" onclick="toggleTeamPicker()" style="background: var(--bg3); border-color: var(--border2); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; color: var(--text); padding: 7px 12px; border-radius: 7px; font-size: 13px; outline: none; cursor: pointer; min-width: 160px; text-align: left; font-family: var(--font);" fdprocessedid="7hb7p">Selecionar teams ▾</button>
@@ -1166,7 +1166,7 @@ tr.row-pend:hover td{background:#fef9ec}
 <div id="page-cadastros" class="page">
   <div class="tbl-wrap">
     <div class="tbl-header" style="flex-wrap:wrap;gap:8px">
-      <input type="text" id="cad-search" placeholder="Buscar por código, modelo, placa, tipo..." oninput="renderCadastros()" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;min-width:260px;flex:1">
+      <input type="text" id="cad-search" placeholder="Buscar por código, modelo, placa, tipo..." oninput="renderCadastros()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;min-width:260px;flex:1">
       <select id="cad-type-filter" onchange="renderCadastros()" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:7px;font-size:13px;outline:none;cursor:pointer"><option value="">Todos os tipos</option><option value="CHRY">CHRY</option><option value="COMPRESSOR">COMPRESSOR</option><option value="DITCH WITCH">DITCH WITCH</option><option value="ESCAVATOR">ESCAVATOR</option><option value="EXCAVATOR">EXCAVATOR</option><option value="FORKLIFT">FORKLIFT</option><option value="FORTLIFT">FORTLIFT</option><option value="GPRS">GPRS</option><option value="LOCATOR">LOCATOR</option><option value="TRAILER">TRAILER</option><option value="TRUCK">TRUCK</option><option value="UTILITY LOCATOR">UTILITY LOCATOR</option><option value="VACUUM">VACUUM</option><option value="VERMEER">VERMEER</option></select>
       <span id="cad-count" style="color:var(--text3);font-size:12px;align-self:center">205 itens</span>
       <button onclick="openEditPopup(null)" style="background:var(--blue);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);white-space:nowrap">+ Novo item</button>
@@ -9110,7 +9110,7 @@ function renderDashboard() {
     + '</tbody></table></div>'
     + '<div class="section-title">Consulta rápida por código</div>'
     + '<div style="background:var(--bg3);border-radius:8px;padding:12px 14px">'
-    + '<input type="text" id="dash-lookup" autocomplete="off" placeholder="Digite o código (ex: TRK-029)" oninput="dashLookup()" style="width:220px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;text-transform:uppercase">'
+    + '<input type="text" id="dash-lookup" autocomplete="off" readonly onfocus="this.removeAttribute(\'readonly\')" placeholder="Digite o código (ex: TRK-029)" oninput="dashLookup()" style="width:220px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;text-transform:uppercase">'
     + '<div id="dash-lookup-result" style="margin-top:10px;font-size:13px;color:var(--text3)">Digite um código para ver os detalhes.</div>'
     + '</div>'
     + '<div class="section-title">Movimentações recentes</div>'
@@ -9425,7 +9425,7 @@ function renderTeams() {
   }
 
   const grid = document.getElementById('teams-grid');
-  grid.innerHTML = teams.map(t => {
+  var teamHtml = teams.map(t => {
     const types = {};
     t.allAssets.forEach(a => { types[a.type] = (types[a.type]||0)+1; });
     const states = [...new Set(t.allAssets.map(a => a.state).filter(Boolean))];
@@ -9445,7 +9445,31 @@ function renderTeams() {
       + '<div class="team-card-pills">'
       + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
       + '</div>' + emptyLine + '</div>';
-  }).join('') || '<p style="color:var(--text3);font-size:13px">Nenhum resultado.</p>';
+  }).join('');
+
+  // Seção separada: supervisores com equipamento direto (sem equipe)
+  var supMap = {};
+  DB.assets.forEach(function(a){
+    if ((!a.team || !String(a.team).trim()) && a.leader && String(a.leader).trim()) {
+      (supMap[a.leader] = supMap[a.leader] || []).push(a);
+    }
+  });
+  var supNames = Object.keys(supMap).sort();
+  if (selectedTeamsFilter.length > 0) supNames = [];
+  else if (q) supNames = supNames.filter(function(s){ return s.toLowerCase().indexOf(q) >= 0 || supMap[s].some(function(a){ return [a.cod,a.type,a.model,a.plate].join(' ').toLowerCase().indexOf(q) >= 0; }); });
+  var supHtml = '';
+  if (supNames.length) {
+    supHtml = '<div style="grid-column:1/-1;margin:18px 0 4px;font-size:13px;font-weight:600;color:var(--text2);border-top:1px solid var(--border);padding-top:14px">Supervisores (equipamento direto)</div>'
+      + supNames.map(function(s){
+          var types = {}; supMap[s].forEach(function(a){ types[a.type] = (types[a.type]||0)+1; });
+          return '<div class="team-card" style="cursor:default">'
+            + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
+            + '<div class="team-card-pills">'
+            + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
+            + '</div></div>';
+        }).join('');
+  }
+  grid.innerHTML = ((teamHtml || '') + supHtml) || '<p style="color:var(--text3);font-size:13px">Nenhum resultado.</p>';
 }
 
 
@@ -10077,8 +10101,11 @@ function updateAssetStatus(cod, newStatus) {
   if (!asset) return;
   asset.status = newStatus;
   saveData();
-  // Refresh assets table if visible
-  if (document.getElementById('page-assets').classList.contains('active')) renderAssets();
+  // Atualiza TODAS as abas na hora (Dashboard, Ativos, Inventário, Histórico, Equipes)
+  rerenderAll();
+  // Se o popup de detalhe deste item estiver aberto, reflete o novo status nele
+  var _dsel = document.getElementById('detail-status-' + cod);
+  if (_dsel) _dsel.value = newStatus;
 }
 
 // EDIT / ADD / DELETE
@@ -10126,7 +10153,7 @@ function openEditPopup(cod) {
       </div>
       <div class="edit-field"><label>Team</label>
         <select id="ef-team">
-          <option value="">Selecione...</option>
+          <option value="">(sem equipe — direto com o supervisor)</option>
           ${teams.map(t => '<option value="'+esc(t)+'"'+(asset&&asset.team===t?' selected':'')+'>'+esc(t)+'</option>').join('')}
           <option value="__NEW__">+ Novo team...</option>
         </select>
@@ -10221,6 +10248,9 @@ function saveEditPopup(cod) {
     if (!leaderVal) return;
     leaderVal = leaderVal.trim();
   }
+
+  // Regra: toda equipe precisa de um supervisor (mas supervisor pode existir sem equipe)
+  if (teamVal && !leaderVal) { alert('⚠ Toda equipe precisa de um supervisor.\n\nSelecione (ou crie) o supervisor, ou deixe a equipe em branco para ficar direto com o supervisor.'); return; }
 
   const fields = {
     cod: newCod, type: typeVal,
@@ -10352,6 +10382,20 @@ function editPerson(kind, oldName) {
 function deletePerson(kind, name) {
   var field = _fieldOf(kind);
   var n = DB.assets.filter(function(a){ return (a[field]||'') === name; }).length;
+  if (kind === 'team') {
+    if (n > 0) {
+      if (!confirm('Remover a equipe "' + name + '"?\n\nOs ' + n + ' equipamento(s) dela NÃO somem — passam para o supervisor (aparecem no card do supervisor).')) return;
+      DB.assets.forEach(function(a){ if ((a.team||'') === name) { a.team = a.leader || ''; } });
+    } else {
+      if (!confirm('Remover a equipe "' + name + '"?')) return;
+    }
+    var tr = teamReg(); var ti = tr.findIndex(function(t){ return t.name === name; }); if (ti >= 0) tr.splice(ti, 1);
+    var ext = (DB.extraTeams||[]); var ei = ext.indexOf(name); if (ei >= 0) ext.splice(ei, 1);
+    try { pushTeams(); } catch(e){}
+    saveData(); renderPessoas(); rerenderAll(); try{ renderTeams(); }catch(e2){}
+    alert('🗑 Equipe "' + name + '" removida. Os equipamentos foram mantidos com o supervisor.');
+    return;
+  }
   if (n > 0) {
     if (!confirm('"' + name + '" está em ' + n + ' equipamento(s). Remover vai deixar esses equipamentos SEM ' + _labelOf(kind) + ' (em branco). Continuar?')) return;
     DB.assets.forEach(function(a){ if ((a[field]||'') === name) a[field] = ''; });
@@ -10359,7 +10403,6 @@ function deletePerson(kind, name) {
     if (!confirm('Remover "' + name + '"?')) return;
   }
   var ex = _extraList(kind), i = ex.indexOf(name); if (i >= 0) ex.splice(i, 1);
-  if (kind === 'team') { var tr = teamReg(); var ti = tr.findIndex(function(t){ return t.name === name; }); if (ti >= 0) tr.splice(ti, 1); pushTeams(); }
   saveData();
   renderPessoas(); rerenderAll();
   alert('🗑 "' + name + '" removido.');
