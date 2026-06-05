@@ -10386,7 +10386,7 @@ function deletePerson(kind, name) {
   if (kind === 'team') {
     if (n > 0) {
       if (!confirm('Remover a equipe "' + name + '"?\n\nOs ' + n + ' equipamento(s) dela NÃO somem — passam para o supervisor (aparecem no card do supervisor).')) return;
-      DB.assets.forEach(function(a){ if ((a.team||'') === name) { a.team = a.leader || ''; } });
+      DB.assets.forEach(function(a){ if ((a.team||'') === name) { a.team = (a.leader && a.leader !== name) ? a.leader : ''; } });
     } else {
       if (!confirm('Remover a equipe "' + name + '"?')) return;
     }
