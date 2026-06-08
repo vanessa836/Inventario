@@ -2,6 +2,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fleet Control 2026</title>
+<script>
+/* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
+window.__BUILD = '2026-06-08-A';
+(function(){
+  try {
+    if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
+    fetch('index.html?probe=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var m = t.match(/__BUILD\s*=\s*'([^']+)'/);
+        if (m && m[1] !== window.__BUILD) {
+          location.replace(location.pathname + '?fresh=' + encodeURIComponent(m[1]));
+        }
+      }).catch(function(){});
+  } catch(e){}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
