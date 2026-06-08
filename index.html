@@ -512,7 +512,7 @@ tr.row-pend:hover td{background:#fef9ec}
       </div>
       <div class="bulk-field">
         <label>Novo Crew Leader / Supervisor</label>
-        <input id="bulk-leader" type="text" placeholder="Nome do supervisor" oninput="bulkPreview()">
+        <select id="bulk-leader" onchange="bulkPreview()"><option value="">Selecione o supervisor...</option></select>
       </div>
       <div class="bulk-field">
         <label>Nova Cidade</label>
@@ -8940,6 +8940,7 @@ function saveData() {
     updateSaveIndicator();
     autoSaveToFile();   // grava no arquivo do PC, se o salvamento automático estiver ativado
     cloudPush();        // sincroniza na nuvem, se ativado
+    scheduleRerenderAll(); // mantém TODAS as abas alinhadas após qualquer alteração
   } catch(e) {
     const el = document.getElementById('save-indicator');
     if (el) { el.className = 'save-indicator unsaved'; el.textContent = '⚠ ERRO ao salvar — faça um backup'; }
@@ -9146,41 +9147,87 @@ function dashLookup() {
 // BULK UPDATE
 function populateBulkTeams() {
   const teams = [...new Set(DB.assets.map(a => a.team).filter(Boolean))].sort();
+  const leaders = [...new Set(DB.assets.map(a => a.leader).filter(Boolean))].sort();
+  // junta supervisores do registro/extra também
+  (DB.extraSupervisors || []).forEach(function(s){ if (s && leaders.indexOf(s) < 0) leaders.push(s); });
+  leaders.sort();
+
+  // ALVO: Team OU Supervisor (valor com prefixo T| ou S|)
   const sel = document.getElementById('bulk-team');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Selecione o team...</option>' +
-    teams.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  if (sel) {
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Selecione o alvo...</option>'
+      + '<optgroup label="Teams">'
+      + teams.map(t => `<option value="T|${esc(t)}">${esc(t)}</option>`).join('')
+      + '</optgroup>'
+      + '<optgroup label="Supervisores (equipamento direto)">'
+      + leaders.map(l => `<option value="S|${esc(l)}">${esc(l)}</option>`).join('')
+      + '</optgroup>';
+    sel.value = prev;
+  }
+
+  // NOVO SUPERVISOR: lista suspensa de supervisores atuais + criar novo
+  const ls = document.getElementById('bulk-leader');
+  if (ls && ls.tagName === 'SELECT') {
+    const prevL = ls.value;
+    ls.innerHTML = '<option value="">Selecione o supervisor...</option>'
+      + leaders.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('')
+      + '<option value="__NEW__">+ Novo supervisor...</option>';
+    ls.value = prevL;
+  }
+}
+
+// resolve o alvo selecionado (Team ou Supervisor) -> {kind, name}
+function _bulkTarget() {
+  const raw = document.getElementById('bulk-team').value;
+  if (!raw) return null;
+  if (raw.indexOf('|') > -1) { const p = raw.split('|'); return { kind: p[0], name: p.slice(1).join('|') }; }
+  return { kind: 'T', name: raw }; // compatibilidade
+}
+function _bulkMatch(a, tgt) {
+  if (!tgt) return false;
+  return tgt.kind === 'S' ? ((a.leader||'') === tgt.name) : ((a.team||'') === tgt.name);
 }
 
 function bulkPreview() {
-  const team   = document.getElementById('bulk-team').value;
-  const leader = document.getElementById('bulk-leader').value.trim();
+  const tgt    = _bulkTarget();
+  let   leader = document.getElementById('bulk-leader').value;
+  if (leader === '__NEW__') leader = ''; // só mostra na prévia ao aplicar
+  leader = (leader||'').trim();
   const city   = document.getElementById('bulk-city').value.trim();
   const state  = document.getElementById('bulk-state').value;
   const prev   = document.getElementById('bulk-preview');
-  if (!team) { prev.classList.remove('show'); return; }
-  const count  = DB.assets.filter(a => a.team === team).length;
+  if (!tgt) { prev.classList.remove('show'); return; }
+  const count  = DB.assets.filter(a => _bulkMatch(a, tgt)).length;
   const changes = [];
   if (leader) changes.push(`Supervisor → <b>${esc(leader)}</b>`);
   if (city)   changes.push(`Cidade → <b>${esc(city)}${state?', '+state:''}</b>`);
   if (!changes.length) { prev.classList.remove('show'); return; }
-  prev.innerHTML = `${count} itens do team <b>${esc(team)}</b> serão atualizados: ${changes.join(' · ')}`;
+  const alvoLabel = (tgt.kind === 'S' ? 'supervisor ' : 'team ');
+  prev.innerHTML = `${count} itens do ${alvoLabel}<b>${esc(tgt.name)}</b> serão atualizados: ${changes.join(' · ')}`;
   prev.classList.add('show');
 }
 
 function applyBulkUpdate() {
-  const team   = document.getElementById('bulk-team').value;
-  const leader = document.getElementById('bulk-leader').value.trim();
+  const tgt    = _bulkTarget();
+  let   leader = document.getElementById('bulk-leader').value;
   const city   = document.getElementById('bulk-city').value.trim();
   const state  = document.getElementById('bulk-state').value;
   const obs    = document.getElementById('bulk-obs').value.trim();
-  if (!team) { alert('Selecione um team.'); return; }
+  if (!tgt) { alert('Selecione um alvo (team ou supervisor).'); return; }
+  if (leader === '__NEW__') {
+    leader = (prompt('Nome do novo supervisor:') || '').trim();
+    if (!leader) return;
+    DB.extraSupervisors = DB.extraSupervisors || [];
+    if (DB.extraSupervisors.indexOf(leader) < 0) DB.extraSupervisors.push(leader);
+  }
+  leader = (leader||'').trim();
   if (!leader && !city) { alert('Informe pelo menos o novo supervisor ou a nova cidade.'); return; }
 
   const today = new Date().toLocaleDateString('en-US');
   let count = 0;
   DB.assets.forEach(a => {
-    if (a.team !== team) return;
+    if (!_bulkMatch(a, tgt)) return;
     const oldLeader = a.leader;
     const oldCity   = a.city;
     const oldState  = a.state;
@@ -9194,8 +9241,8 @@ function applyBulkUpdate() {
     if (changes.length) {
       DB.history.push({
         cod: a.cod,
-        from_team: oldLeader || oldCity || team,
-        to_team: leader || city || team,
+        from_team: oldLeader || oldCity || tgt.name,
+        to_team: leader || city || tgt.name,
         date: today,
         responsible: leader || '',
         obs: (obs ? obs+' | ' : '') + changes.join(' | '),
@@ -9219,19 +9266,23 @@ function applyBulkUpdate() {
 
 // POPULATE FILTERS
 function populateFilters() {
-  const types = [...new Set(DB.assets.map(a => a.type))].sort();
+  const types = [...new Set(DB.assets.map(a => a.type).filter(Boolean))].sort();
   const leaders = [...new Set(DB.assets.map(a => a.leader).filter(Boolean))].sort();
   const states = [...new Set(DB.assets.map(a => a.state).filter(Boolean))].sort();
 
-  const tf = document.getElementById('asset-type-filter');
-  types.forEach(t => { const o = document.createElement('option'); o.value = t; o.text = t; tf.appendChild(o); });
-  const lf = document.getElementById('asset-leader-filter');
-  leaders.forEach(l => { const o = document.createElement('option'); o.value = l; o.text = l; lf.appendChild(o); });
-  const sf = document.getElementById('asset-state-filter');
-  states.forEach(s => { const o = document.createElement('option'); o.value = s; o.text = s; sf.appendChild(o); });
-
-  const itf = document.getElementById('inv-type-filter');
-  types.forEach(t => { const o = document.createElement('option'); o.value = t; o.text = t; itf.appendChild(o); });
+  // Preenche um <select> SEM duplicar: limpa (preserva o 1º option-placeholder) e mantém a seleção atual
+  function fill(id, values, placeholder) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prev = el.value;
+    el.innerHTML = '<option value="">' + placeholder + '</option>'
+      + values.map(function(v){ return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('');
+    if (prev && values.indexOf(prev) >= 0) el.value = prev;
+  }
+  fill('asset-type-filter',   types,   'Todos os tipos');
+  fill('asset-leader-filter', leaders, 'Todos os supervisores');
+  fill('asset-state-filter',  states,  'Todos os estados');
+  fill('inv-type-filter',     types,   'Todos os tipos');
 }
 
 // ASSETS TABLE
@@ -9324,8 +9375,8 @@ function renderInventory() {
       <td>${cellAlert(i.verizon)}</td>
       <td>${cellAlert(i.epass)}</td>
       <td>${cellAlert(i.inspecao)}</td>
-      <td style="font-size:12px">${esc(i.registration)}</td>
-      <td style="font-size:12px">${esc(i.insurance)}</td>
+      <td style="font-size:12px">${esc(_fmtDateStr(i.registration))}</td>
+      <td style="font-size:12px">${esc(_fmtDateStr(i.insurance))}</td>
       <td style="font-size:12px">${esc(i.owner)}</td>
       <td style="font-size:11px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(i.obs)}">${esc(i.obs)}</td>
       <td><button class="icon-btn" onclick="openInvDetail('${esc(i.cod)}')">Ver</button></td>
@@ -9356,7 +9407,7 @@ function renderHistory() {
       <td>${esc(h.cod)}</td>
       <td>${esc(h.from_team)}</td>
       <td>${esc(h.to_team)}</td>
-      <td>${esc(h.date)}</td>
+      <td>${esc(_fmtDateStr(h.date))}</td>
       <td style="font-size:11px;color:var(--text3)">${esc(h.obs)}</td>
     </tr>
   `).join('');
@@ -9463,7 +9514,7 @@ function renderTeams() {
     supHtml = '<div style="grid-column:1/-1;margin:18px 0 4px;font-size:13px;font-weight:600;color:var(--text2);border-top:1px solid var(--border);padding-top:14px">Supervisores (equipamento direto)</div>'
       + supNames.map(function(s){
           var types = {}; supMap[s].forEach(function(a){ types[a.type] = (types[a.type]||0)+1; });
-          return '<div class="team-card" style="cursor:default">'
+          return '<div class="team-card" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
             + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
             + '<div class="team-card-pills">'
             + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
@@ -9473,6 +9524,71 @@ function renderTeams() {
   grid.innerHTML = ((teamHtml || '') + supHtml) || '<p style="color:var(--text3);font-size:13px">Nenhum resultado.</p>';
 }
 
+
+// Linha de equipamento reutilizável nos pop-ups (team e supervisor)
+function buildPopupAssetRow(a) {
+  const selOk   = (a.status && a.status.includes('Em Dia'))    ? 'selected' : '';
+  const selWarn = (a.status && a.status.includes('andamento')) ? 'selected' : '';
+  const selPend = (a.status && a.status.includes('Pendente'))  ? 'selected' : '';
+  const plate = (a.plate && a.plate !== 'FALTA') ? a.plate : null;
+  const vin   = (a.vin   && a.vin   !== 'FALTA') ? a.vin   : null;
+  const div = document.createElement('div');
+  div.className = 'popup-asset-row';
+  div.style.cursor = 'pointer';
+  div.onclick = function(e) { openMovePicker(e, a.cod); };
+  div.innerHTML =
+    '<span style="font-size:14px;color:var(--blue);margin-right:2px">↗</span>'
+    + '<span class="popup-asset-cod">' + esc(a.cod) + '</span>'
+    + '<span class="popup-asset-type">' + esc(a.type) + '</span>'
+    + '<div style="flex:1;min-width:0">'
+    +   '<div style="font-size:13px;color:var(--text2)">' + esc(a.model) + '</div>'
+    +   '<div style="display:flex;gap:8px;margin-top:2px">'
+    +     (plate
+           ? '<span style="font-size:10px;font-family:monospace;background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--text2);cursor:pointer" title="Clique para editar placa">Plate: ' + esc(plate) + '</span>'
+           : '<span style="font-size:10px;color:var(--text3);cursor:pointer">✏ Plate</span>')
+    +     (vin
+           ? '<span style="font-size:10px;font-family:monospace;color:var(--text3);word-break:break-all;cursor:pointer">VIN: ' + esc(vin) + '</span>'
+           : '<span style="font-size:10px;color:var(--text3);cursor:pointer">✏ VIN</span>')
+    +   '</div>'
+    + '</div>'
+    + statusBadge(a.status)
+    + '<select onclick="event.stopPropagation()" style="font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;outline:none;flex-shrink:0">'
+    +   '<option value="✅ Em Dia" '       + selOk   + '>✅ Em Dia</option>'
+    +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
+    +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
+    + '</select>'
+    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0">↗ Mover</button>'
+    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏</button>';
+  const els = div.querySelectorAll('span[title]');
+  if (els[0]) els[0].onclick = function(e) { e.stopPropagation(); editField(a.cod, 'plate', this); };
+  const sel = div.querySelector('select');
+  if (sel) sel.onchange = function() { updateAssetStatus(a.cod, this.value); };
+  const btns = div.querySelectorAll('button');
+  if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); moveFromTeamPopup(a.cod, a.team, a.leader); };
+  if (btns[1]) btns[1].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
+  return div;
+}
+
+// Pop-up de supervisor (equipamento direto: leader = nome e sem team)
+function openSupervisorPopup(supName) {
+  var assets = DB.assets.filter(function(a){ return (a.leader||'')===supName && (!a.team || !String(a.team).trim()); });
+  if (!assets.length) return;
+  var trucks   = assets.filter(function(a){return a.type==='TRUCK';}).length;
+  var trailers = assets.filter(function(a){return a.type==='TRAILER';}).length;
+  var machines = assets.filter(function(a){return ['VERMEER','DITCH WITCH','DTCH WITCH'].includes(a.type);}).length;
+  document.getElementById('tp-title').textContent = 'Supervisor: ' + supName;
+  document.getElementById('tp-meta').innerHTML = 'Equipamento direto (sem equipe) · <span style="color:var(--blue);font-weight:500">' + esc(supName) + '</span>';
+  var body = '<div class="popup-stats">'
+    + '<div class="popup-stat"><div class="n">' + assets.length + '</div><div class="l">Total</div></div>'
+    + '<div class="popup-stat"><div class="n">' + trucks   + '</div><div class="l">Trucks</div></div>'
+    + '<div class="popup-stat"><div class="n">' + trailers + '</div><div class="l">Trailers</div></div>'
+    + '<div class="popup-stat"><div class="n">' + machines + '</div><div class="l">Máquinas</div></div>'
+    + '</div>';
+  var popupBody = document.getElementById('team-popup-body');
+  popupBody.innerHTML = body;
+  assets.forEach(function(a){ popupBody.appendChild(buildPopupAssetRow(a)); });
+  document.getElementById('team-popup-bg').classList.add('open');
+}
 
 function openTeamPopup(teamName, leaderName) {
   // Get main team assets — filter by team name only (not leader, to catch newly moved items)
@@ -9753,8 +9869,8 @@ function openAssetDetail(idx) {
       <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Inspeção</div>${cellAlert(invItem.inspecao)}</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;font-size:12px">
-      <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Registration</div><span style="color:var(--text2)">${esc(invItem.registration)||'—'}</span></div>
-      <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Insurance</div><span style="color:var(--text2)">${esc(invItem.insurance)||'—'}</span></div>
+      <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Registration</div><span style="color:var(--text2)">${esc(_fmtDateStr(invItem.registration))||'—'}</span></div>
+      <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Insurance</div><span style="color:var(--text2)">${esc(_fmtDateStr(invItem.insurance))||'—'}</span></div>
       <div><div style="color:var(--text3);font-size:11px;margin-bottom:2px">Proprietário</div><span style="color:var(--text2)">${esc(invItem.owner)||'—'}</span></div>
     </div>
     ${invItem.obs ? '<div style="background:var(--bg3);padding:8px 12px;border-radius:7px;font-size:11px;color:var(--text2);margin-bottom:16px">'+esc(invItem.obs)+'</div>' : ''}
@@ -9930,8 +10046,8 @@ function openInvDetail(cod) {
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Bouncie</div>${cellAlert(i.bouncie)}</div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">E-pass</div>${cellAlert(i.epass)}</div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Inspeção</div>${cellAlert(i.inspecao)}</div>
-      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Registration</div><span style="font-size:12px;color:var(--text2)">${esc(i.registration)||'—'}</span></div>
-      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Insurance</div><span style="font-size:12px;color:var(--text2)">${esc(i.insurance)||'—'}</span></div>
+      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Registration</div><span style="font-size:12px;color:var(--text2)">${esc(_fmtDateStr(i.registration))||'—'}</span></div>
+      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Insurance</div><span style="font-size:12px;color:var(--text2)">${esc(_fmtDateStr(i.insurance))||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">VIN / Serial</div><span style="font-size:11px;font-family:monospace;color:var(--text2)">${esc(i.vin)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Proprietário</div><span style="font-size:12px;color:var(--text2)">${esc(i.owner)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Manutenção</div><span style="font-size:12px;color:var(--text2)">${esc(i.manutencao)||'—'}</span></div>
@@ -9941,7 +10057,7 @@ function openInvDetail(cod) {
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Placa Nova</div><span style="font-size:12px;color:var(--text2)">${esc(i.placa_nova)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Invoice</div><span style="font-size:12px;color:var(--text2)">${esc(i.invoice)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Bill of Sale</div><span style="font-size:12px;color:var(--text2)">${esc(i.bill_of_sale)||'—'}</span></div>
-      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Data de Compra</div><span style="font-size:12px;color:var(--text2)">${esc(i.dt_compra)||'—'}</span></div>
+      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Data de Compra</div><span style="font-size:12px;color:var(--text2)">${esc(_fmtDateStr(i.dt_compra))||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Valor</div><span style="font-size:12px;color:var(--text2)">${esc(i.valor)||'—'}</span></div>
     </div>
     ${i.obs ? `<div style="background:var(--amber2);color:var(--amber);padding:8px 12px;border-radius:7px;font-size:12px;margin-bottom:14px">${esc(i.obs)}</div>` : ''}
@@ -10929,9 +11045,18 @@ async function importInventarioExcel() {
 }
 
 function rerenderAll() {
-  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams']
+  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams','renderPessoas']
     .forEach(function(fn){ try { if (typeof window[fn] === 'function') window[fn](); } catch(e){} });
   try { if (typeof buildTeamCheckboxes === 'function') buildTeamCheckboxes(''); } catch(e){}
+}
+
+// Re-render geral disparado por QUALQUER alteração (saveData), com pequeno atraso pra agrupar.
+// Garante que todas as abas (Dashboard, Movimentação, Inventário, Histórico, Equipes, Pessoas, Assets)
+// fiquem sempre alinhadas, independentemente de qual função fez a mudança.
+var _rerenderTimer = null;
+function scheduleRerenderAll() {
+  clearTimeout(_rerenderTimer);
+  _rerenderTimer = setTimeout(function(){ try { rerenderAll(); } catch(e){} }, 150);
 }
 
 // Tela de senha (aparece só se a nuvem estiver configurada)
