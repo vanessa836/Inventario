@@ -10635,6 +10635,8 @@ function buildTeamCheckboxes(supervisor) {
   });
   const box = document.getElementById('team-checkboxes');
   if (!box) return;
+  // Preserva quais teams já estavam marcados (não perder a seleção ao reconstruir)
+  const prevChecked = Array.from(box.querySelectorAll('input[type=checkbox]:checked')).map(function(b){ return b.value; });
   box.innerHTML = '';
   teams.forEach(function(t) {
     const label = document.createElement('label');
@@ -10644,6 +10646,7 @@ function buildTeamCheckboxes(supervisor) {
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = t;
+    if (prevChecked.indexOf(t) >= 0) cb.checked = true;
     cb.style.cursor = 'pointer';
     cb.addEventListener('change', function() {
       updateTeamPickerBtn();
