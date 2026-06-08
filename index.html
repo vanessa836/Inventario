@@ -4,7 +4,7 @@
 <title>Fleet Control 2026</title>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-08-A';
+window.__BUILD = '2026-06-08-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9494,6 +9494,9 @@ function renderTeams() {
     });
   }
 
+  // Guarda os teams atualmente VISÍVEIS na tela (pra impressão bater com a tela)
+  window.__visibleTeamNames = teams.map(function(t){ return t.team; });
+
   const grid = document.getElementById('teams-grid');
   var teamHtml = teams.map(t => {
     const types = {};
@@ -9527,6 +9530,8 @@ function renderTeams() {
   var supNames = Object.keys(supMap).sort();
   if (selectedTeamsFilter.length > 0) supNames = [];
   else if (q) supNames = supNames.filter(function(s){ return s.toLowerCase().indexOf(q) >= 0 || supMap[s].some(function(a){ return [a.cod,a.type,a.model,a.plate].join(' ').toLowerCase().indexOf(q) >= 0; }); });
+  // Guarda os supervisores (equipamento direto) VISÍVEIS na tela (pra impressão bater com a tela)
+  window.__visibleSupNames = supNames.slice();
   var supHtml = '';
   if (supNames.length) {
     supHtml = '<div style="grid-column:1/-1;margin:18px 0 4px;font-size:13px;font-weight:600;color:var(--text2);border-top:1px solid var(--border);padding-top:14px">Supervisores (equipamento direto)</div>'
@@ -10736,11 +10741,14 @@ document.addEventListener('click', function(e) {
 });
 
 function printSupervisorReport() {
-  const supervisor = document.getElementById('supervisor-select').value;
-  const selectedTeams = getSelectedTeams();
   const today = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
 
-  // Build team map same as renderTeams
+  // 1) Atualiza a tela (aplica os filtros atuais) e usa EXATAMENTE o que está visível
+  try { renderTeams(); } catch(e){}
+  var visTeams = (window.__visibleTeamNames || []).slice();
+  var visSup   = (window.__visibleSupNames || []).slice();
+
+  // 2) Monta os teams (mesma lógica da tela)
   const teamMap = {};
   const geralItems = [];
   DB.assets.forEach(a => {
@@ -10758,68 +10766,65 @@ function printSupervisorReport() {
     target.geral.push(a); target.assets.push(a);
   });
 
-  let teams = Object.values(teamMap).sort((a,b) => a.team.localeCompare(b.team));
-  if (supervisor) teams = teams.filter(t => t.leader === supervisor);
-  if (selectedTeams.length > 0) {
-    // Filtro pelos checkboxes "Selecionar teams"
-    teams = teams.filter(t => selectedTeams.includes(t.team));
-  } else {
-    // Sem checkboxes marcados: respeita o MESMO filtro que está na tela (caixa "Buscar...")
-    const q = (document.getElementById('teams-search')?.value || '').trim().toLowerCase();
-    if (q) {
-      teams = teams.filter(function(t){
-        const hay = [t.team, t.leader].join(' ').toLowerCase();
-        if (hay.includes(q)) return true;
-        return t.assets.some(function(a){
-          return [a.cod,a.type,a.model,a.plate,a.city,a.state,a.driver,a.vin,a.obs].join(' ').toLowerCase().includes(q);
-        });
-      });
-    }
+  // 3) Filtra para SÓ os teams visíveis na tela
+  let teams = Object.values(teamMap)
+    .filter(t => visTeams.indexOf(t.team) >= 0)
+    .sort((a,b) => a.team.localeCompare(b.team));
+
+  // 4) Supervisores com equipamento direto que estão visíveis
+  var supDirect = visSup.map(function(s){
+    return { sup: s, assets: DB.assets.filter(function(a){ return (a.leader||'')===s && (!a.team || !String(a.team).trim()); }) };
+  }).filter(function(x){ return x.assets.length; });
+
+  if (!teams.length && !supDirect.length) {
+    alert('Nada para imprimir. Filtre os teams na tela (busca ou "Selecionar teams") e tente de novo.');
+    return;
   }
 
-  if (!teams.length) { alert('Nenhum team para imprimir. Selecione os teams (ou use a busca) e tente de novo.'); return; }
+  function assetRow(a) {
+    const statusText = a.status ? a.status.replace(/[✅🟠🟡]/g,'').trim() : '';
+    return '<div class="report-row">'
+      + '<span class="report-cod">' + esc(a.cod) + '</span>'
+      + '<span class="report-type">' + esc(a.type) + '</span>'
+      + '<span class="report-model">' + esc(a.model) + '</span>'
+      + '<span class="report-plate">' + (a.plate ? esc(a.plate) : '—') + '</span>'
+      + '<span class="report-vin">' + (a.vin ? esc(a.vin) : '—') + '</span>'
+      + '<span class="report-status">' + esc(statusText) + '</span>'
+      + '</div>';
+  }
 
-  const supTitle = supervisor || 'Todos os Supervisores';
+  var allNames = teams.map(function(t){return t.team;}).concat(supDirect.map(function(x){return x.sup;}));
   let html = '<div class="report-header">'
     + '<div class="report-title">Fleet 2026 — Relatório de Equipes</div>'
-    + '<div class="report-sub">Supervisor: <b>' + esc(supTitle) + '</b> &nbsp;·&nbsp; Data: ' + today + (selectedTeams.length > 0 ? '<br>Teams: <b>' + selectedTeams.map(function(t){return esc(t);}).join(', ') + '</b>' : '<br>Teams: <b>' + teams.map(function(t){return esc(t.team);}).join(', ') + '</b>') + '</div>'
+    + '<div class="report-sub">Data: ' + today + '<br>Mostrando: <b>' + (allNames.length ? allNames.map(function(n){return esc(n);}).join(', ') : '—') + '</b></div>'
     + '</div>';
 
+  var totalAssets = 0;
+
   teams.forEach(function(t) {
-    const allAssets = t.assets;
-    // Main team assets
-    const mainAssets = allAssets.filter(a => a.team !== 'Geral');
+    const mainAssets = t.assets.filter(a => a.team !== 'Geral');
     const geralAssets = t.geral;
-
+    totalAssets += t.assets.length;
     html += '<div class="report-team-block">'
-          + '<div class="report-team-name">Team: ' + esc(t.team) + ' <span style="font-weight:400;font-size:11px;color:#666">(' + allAssets.length + ' itens) · Supervisor: ' + esc(t.leader) + '</span></div>';
-
-    function assetRow(a) {
-      const statusText = a.status ? a.status.replace(/[✅🟠🟡]/g,'').trim() : '';
-      return '<div class="report-row">'
-        + '<span class="report-cod">' + esc(a.cod) + '</span>'
-        + '<span class="report-type">' + esc(a.type) + '</span>'
-        + '<span class="report-model">' + esc(a.model) + '</span>'
-        + '<span class="report-plate">' + (a.plate ? esc(a.plate) : '—') + '</span>'
-        + '<span class="report-vin">' + (a.vin ? esc(a.vin) : '—') + '</span>'
-        + '<span class="report-status">' + esc(statusText) + '</span>'
-        + '</div>';
-    }
-
+          + '<div class="report-team-name">Team: ' + esc(t.team) + ' <span style="font-weight:400;font-size:11px;color:#666">(' + t.assets.length + ' itens) · Supervisor: ' + esc(t.leader) + '</span></div>';
     mainAssets.forEach(a => { html += assetRow(a); });
-
     if (geralAssets.length > 0) {
       html += '<div style="font-size:11px;font-weight:600;color:#2563eb;margin:8px 0 4px;text-transform:uppercase">Geral (' + geralAssets.length + ')</div>';
       geralAssets.forEach(a => { html += assetRow(a); });
     }
-
     html += '</div>';
   });
 
-  // Total summary
-  const totalAssets = teams.reduce((s,t) => s + t.assets.length, 0);
+  supDirect.forEach(function(x) {
+    totalAssets += x.assets.length;
+    html += '<div class="report-team-block">'
+          + '<div class="report-team-name">Supervisor: ' + esc(x.sup) + ' <span style="font-weight:400;font-size:11px;color:#666">(' + x.assets.length + ' itens · equipamento direto)</span></div>';
+    x.assets.forEach(a => { html += assetRow(a); });
+    html += '</div>';
+  });
+
   html += '<div style="margin-top:20px;padding-top:12px;border-top:2px solid #1a1d2e;font-size:12px;color:#666">'
-        + 'Total de itens: <b>' + totalAssets + '</b> &nbsp;·&nbsp; Teams: <b>' + teams.length + '</b>'
+        + 'Total de itens: <b>' + totalAssets + '</b> &nbsp;·&nbsp; Blocos: <b>' + (teams.length + supDirect.length) + '</b>'
         + '</div>';
 
   const report = document.getElementById('print-report');
