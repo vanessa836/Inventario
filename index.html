@@ -10743,14 +10743,29 @@ function printSupervisorReport() {
 
   let teams = Object.values(teamMap).sort((a,b) => a.team.localeCompare(b.team));
   if (supervisor) teams = teams.filter(t => t.leader === supervisor);
-  if (selectedTeams.length > 0) teams = teams.filter(t => selectedTeams.includes(t.team));
+  if (selectedTeams.length > 0) {
+    // Filtro pelos checkboxes "Selecionar teams"
+    teams = teams.filter(t => selectedTeams.includes(t.team));
+  } else {
+    // Sem checkboxes marcados: respeita o MESMO filtro que está na tela (caixa "Buscar...")
+    const q = (document.getElementById('teams-search')?.value || '').trim().toLowerCase();
+    if (q) {
+      teams = teams.filter(function(t){
+        const hay = [t.team, t.leader].join(' ').toLowerCase();
+        if (hay.includes(q)) return true;
+        return t.assets.some(function(a){
+          return [a.cod,a.type,a.model,a.plate,a.city,a.state,a.driver,a.vin,a.obs].join(' ').toLowerCase().includes(q);
+        });
+      });
+    }
+  }
 
-  if (!teams.length) { alert('Selecione pelo menos um team para imprimir.'); return; }
+  if (!teams.length) { alert('Nenhum team para imprimir. Selecione os teams (ou use a busca) e tente de novo.'); return; }
 
   const supTitle = supervisor || 'Todos os Supervisores';
   let html = '<div class="report-header">'
     + '<div class="report-title">Fleet 2026 — Relatório de Equipes</div>'
-    + '<div class="report-sub">Supervisor: <b>' + esc(supTitle) + '</b> &nbsp;·&nbsp; Data: ' + today + (selectedTeams.length > 0 ? '<br>Teams: <b>' + selectedTeams.map(function(t){return esc(t);}).join(', ') + '</b>' : '') + '</div>'
+    + '<div class="report-sub">Supervisor: <b>' + esc(supTitle) + '</b> &nbsp;·&nbsp; Data: ' + today + (selectedTeams.length > 0 ? '<br>Teams: <b>' + selectedTeams.map(function(t){return esc(t);}).join(', ') + '</b>' : '<br>Teams: <b>' + teams.map(function(t){return esc(t.team);}).join(', ') + '</b>') + '</div>'
     + '</div>';
 
   teams.forEach(function(t) {
