@@ -4,7 +4,7 @@
 <title>Fleet Control 2026</title>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-08-B';
+window.__BUILD = '2026-06-09-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9931,8 +9931,14 @@ function openAssetDetail(idx) {
 }
 
 function teamOptions() {
-  const teams = [...new Set(DB.assets.map(a => a.team).filter(Boolean))].sort();
-  // Add special options
+  // Equipes com equipamento (ao vivo)
+  const fromAssets = DB.assets.map(a => a.team).filter(Boolean);
+  // Equipes do cadastro/registro (mesmo sem equipamento ainda)
+  const fromReg = (DB.teams || []).map(t => t && t.name).filter(Boolean);
+  // Supervisores (pra mover direto pra um supervisor, sem equipe)
+  const fromLeaders = DB.assets.map(a => a.leader).filter(Boolean);
+  const teams = [...new Set([...fromAssets, ...fromReg, ...fromLeaders])].sort();
+  // Opções especiais
   const extras = ['Yard', 'Pendente', 'Manutenção', 'Emprestado'];
   const all = [...new Set([...teams, ...extras])].sort();
   return all.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
