@@ -4,7 +4,7 @@
 <title>Fleet Control 2026</title>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-09-A';
+window.__BUILD = '2026-06-09-C';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9558,7 +9558,7 @@ function buildPopupAssetRow(a) {
   const div = document.createElement('div');
   div.className = 'popup-asset-row';
   div.style.cursor = 'pointer';
-  div.onclick = function(e) { openMovePicker(e, a.cod); };
+  div.onclick = function(){ moveFromTeamPopup(a.cod, a.team, a.leader); };
   div.innerHTML =
     '<span style="font-size:14px;color:var(--blue);margin-right:2px">↗</span>'
     + '<span class="popup-asset-cod">' + esc(a.cod) + '</span>'
@@ -9663,7 +9663,7 @@ function openTeamPopup(teamName, leaderName) {
     const div = document.createElement('div');
     div.className = 'popup-asset-row';
     div.style.cursor = 'pointer';
-    div.onclick = function() { openMovePicker(event, a.cod); };
+    div.onclick = function() { moveFromTeamPopup(a.cod, a.team, a.leader); };
     div.innerHTML =
       '<span style="font-size:14px;color:var(--blue);margin-right:2px">↗</span>'
       + '<span class="popup-asset-cod">' + esc(a.cod) + '</span>'
@@ -9935,9 +9935,8 @@ function teamOptions() {
   const fromAssets = DB.assets.map(a => a.team).filter(Boolean);
   // Equipes do cadastro/registro (mesmo sem equipamento ainda)
   const fromReg = (DB.teams || []).map(t => t && t.name).filter(Boolean);
-  // Supervisores (pra mover direto pra um supervisor, sem equipe)
-  const fromLeaders = DB.assets.map(a => a.leader).filter(Boolean);
-  const teams = [...new Set([...fromAssets, ...fromReg, ...fromLeaders])].sort();
+  // SÓ equipes (não inclui nomes de supervisor, pra não criar "equipe" com nome de pessoa)
+  const teams = [...new Set([...fromAssets, ...fromReg])].sort();
   // Opções especiais
   const extras = ['Yard', 'Pendente', 'Manutenção', 'Emprestado'];
   const all = [...new Set([...teams, ...extras])].sort();
