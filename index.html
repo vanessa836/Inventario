@@ -4,7 +4,7 @@
 <title>Fleet Control 2026</title>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-09-C';
+window.__BUILD = '2026-06-09-D';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9558,9 +9558,9 @@ function buildPopupAssetRow(a) {
   const div = document.createElement('div');
   div.className = 'popup-asset-row';
   div.style.cursor = 'pointer';
-  div.onclick = function(){ moveFromTeamPopup(a.cod, a.team, a.leader); };
+  div.onclick = function(){ openEditPopup(a.cod); };
   div.innerHTML =
-    '<span style="font-size:14px;color:var(--blue);margin-right:2px">↗</span>'
+    '<span style="font-size:13px;color:var(--blue);margin-right:2px">✏</span>'
     + '<span class="popup-asset-cod">' + esc(a.cod) + '</span>'
     + '<span class="popup-asset-type">' + esc(a.type) + '</span>'
     + '<div style="flex:1;min-width:0">'
@@ -9580,15 +9580,13 @@ function buildPopupAssetRow(a) {
     +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
     +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
     + '</select>'
-    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0">↗ Mover</button>'
-    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏</button>';
+    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>';
   const els = div.querySelectorAll('span[title]');
   if (els[0]) els[0].onclick = function(e) { e.stopPropagation(); editField(a.cod, 'plate', this); };
   const sel = div.querySelector('select');
   if (sel) sel.onchange = function() { updateAssetStatus(a.cod, this.value); };
   const btns = div.querySelectorAll('button');
-  if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); moveFromTeamPopup(a.cod, a.team, a.leader); };
-  if (btns[1]) btns[1].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
+  if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
   return div;
 }
 
@@ -9663,9 +9661,9 @@ function openTeamPopup(teamName, leaderName) {
     const div = document.createElement('div');
     div.className = 'popup-asset-row';
     div.style.cursor = 'pointer';
-    div.onclick = function() { moveFromTeamPopup(a.cod, a.team, a.leader); };
+    div.onclick = function() { openEditPopup(a.cod); };
     div.innerHTML =
-      '<span style="font-size:14px;color:var(--blue);margin-right:2px">↗</span>'
+      '<span style="font-size:13px;color:var(--blue);margin-right:2px">✏</span>'
       + '<span class="popup-asset-cod">' + esc(a.cod) + '</span>'
       + '<span class="popup-asset-type">' + esc(a.type) + '</span>'
       + '<div style="flex:1;min-width:0">'
@@ -9685,8 +9683,7 @@ function openTeamPopup(teamName, leaderName) {
       +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
       +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
       + '</select>'
-      + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0">↗ Mover</button>'
-      + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏</button>';
+      + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>';
 
     // Add event listeners after innerHTML (avoids escaping hell)
     const els = div.querySelectorAll('span[title]');
@@ -9697,8 +9694,7 @@ function openTeamPopup(teamName, leaderName) {
     if (sel) sel.onchange = function() { updateAssetStatus(a.cod, this.value); };
 
     const btns = div.querySelectorAll('button');
-    if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); moveFromTeamPopup(a.cod, a.team, a.leader); };
-    if (btns[1]) btns[1].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
+    if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
 
     return div;
   }
