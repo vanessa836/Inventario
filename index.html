@@ -2,9 +2,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fleet Control 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-09-D';
+window.__BUILD = '2026-06-16-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -600,6 +601,7 @@ tr.row-pend:hover td{background:#fef9ec}
         <option value="inspecao">Inspeção faltando</option>
       </select>
       <span class="count" id="inv-count"></span>
+      <button class="icon-btn" onclick="exportInventarioExcel()" style="margin-left:auto;background:var(--green2);border-color:var(--green);color:var(--green)">📊 Exportar Excel</button>
     </div>
     <table>
       <thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>Verizon</th><th>E-pass</th><th>Inspeção</th><th>Registration</th><th>Seguro</th><th>Proprietário</th><th>Obs</th><th></th></tr></thead>
@@ -1174,6 +1176,7 @@ tr.row-pend:hover td{background:#fef9ec}
           <div id="team-checkboxes"><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Abenamar" style="cursor: pointer;"> Abenamar</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Adilson" style="cursor: pointer;"> Adilson</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Alberto" style="cursor: pointer;"> Alberto</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Allan 1" style="cursor: pointer;"> Allan 1</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Allan 2" style="cursor: pointer;"> Allan 2</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Alvaro/Marcelo" style="cursor: pointer;"> Alvaro/Marcelo</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Anderson/Walter ( CSJ)" style="cursor: pointer;"> Anderson/Walter ( CSJ)</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Apopka" style="cursor: pointer;"> Apopka</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Christian" style="cursor: pointer;"> Christian</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Cristian" style="cursor: pointer;"> Cristian</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Denner" style="cursor: pointer;"> Denner</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Enoe" style="cursor: pointer;"> Enoe</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Esteban/Marcelo" style="cursor: pointer;"> Esteban/Marcelo</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Felipe Resende" style="cursor: pointer;"> Felipe Resende</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Francisco" style="cursor: pointer;"> Francisco</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Joao Felipe Donato" style="cursor: pointer;"> Joao Felipe Donato</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Jonh" style="cursor: pointer;"> Jonh</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Jose Saturnino" style="cursor: pointer;"> Jose Saturnino</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Jose Silva" style="cursor: pointer;"> Jose Silva</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Juan Carlos" style="cursor: pointer;"> Juan Carlos</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Karyme" style="cursor: pointer;"> Karyme</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Luis Castro" style="cursor: pointer;"> Luis Castro</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Luis Castro 2" style="cursor: pointer;"> Luis Castro 2</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Luis/Lucas" style="cursor: pointer;"> Luis/Lucas</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Maikel" style="cursor: pointer;"> Maikel</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Marcelo" style="cursor: pointer;"> Marcelo</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Marcelo Baratela" style="cursor: pointer;"> Marcelo Baratela</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Noel/Marcelo" style="cursor: pointer;"> Noel/Marcelo</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Pendente" style="cursor: pointer;"> Pendente</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Ramon" style="cursor: pointer;"> Ramon</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Renato Fusari" style="cursor: pointer;"> Renato Fusari</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Rodrigo" style="cursor: pointer;"> Rodrigo</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Sidney" style="cursor: pointer;"> Sidney</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Tadeu" style="cursor: pointer;"> Tadeu</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Walter" style="cursor: pointer;"> Walter</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Washinton" style="cursor: pointer;"> Washinton</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Wladimir" style="cursor: pointer;"> Wladimir</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Yard Port" style="cursor: pointer;"> Yard Port</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Yard SC" style="cursor: pointer;"> Yard SC</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Yard WI" style="cursor: pointer;"> Yard WI</label><label style="display: flex; align-items: center; gap: 8px; padding: 5px 4px; cursor: pointer; font-size: 13px; color: var(--text2); border-radius: 5px;"><input type="checkbox" value="Yovani" style="cursor: pointer;"> Yovani</label></div>
         </div>
       </div>
+      <button onclick="exportEquipesExcel()" style="background:var(--green);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)">📊 Exportar Excel</button>
       <button onclick="printSupervisorReport()" style="background:var(--blue);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font)" fdprocessedid="x5e9h9">🖨 Imprimir</button>
     </div>
   </div>
@@ -10425,7 +10428,28 @@ function saveEditPopup(cod) {
   } else {
     // Update existing
     const asset = DB.assets.find(a => a.cod === cod);
-    if (asset) Object.assign(asset, fields);
+    if (asset) {
+      // Guarda os valores antigos pra registrar no histórico se a equipe/supervisor mudar
+      const oldTeam = asset.team || '';
+      const oldLeader = asset.leader || '';
+      Object.assign(asset, fields);
+      const newTeam = asset.team || '';
+      const newLeader = asset.leader || '';
+      if (oldTeam !== newTeam || oldLeader !== newLeader) {
+        const changes = [];
+        if (oldTeam !== newTeam)     changes.push('Equipe: ' + (oldTeam||'(sem equipe)') + ' → ' + (newTeam||'(sem equipe)'));
+        if (oldLeader !== newLeader) changes.push('Supervisor: ' + (oldLeader||'(nenhum)') + ' → ' + (newLeader||'(nenhum)'));
+        DB.history.push({
+          cod: newCod,
+          from_team: oldTeam || oldLeader || '',
+          to_team: newTeam || newLeader || '',
+          date: new Date().toLocaleDateString('en-US'),
+          responsible: '',
+          obs: 'Editado: ' + changes.join(' | '),
+          tipo: 'EDICAO'
+        });
+      }
+    }
     const inv = DB.inventory.find(i => i.cod === cod);
     if (inv) { Object.assign(inv, {type:fields.type, model:fields.model, plate:fields.plate, vin:fields.vin, owner:owner, obs:fields.obs}, invData); }
   }
@@ -11099,6 +11123,33 @@ var _rerenderTimer = null;
 function scheduleRerenderAll() {
   clearTimeout(_rerenderTimer);
   _rerenderTimer = setTimeout(function(){ try { rerenderAll(); } catch(e){} }, 150);
+}
+
+// ===== EXPORTAR PARA EXCEL =====
+function _xlsxDate(){ var d=new Date(); return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2); }
+function _xlsxReady(){ if (typeof XLSX === 'undefined'){ alert('A planilha ainda está carregando (precisa de internet). Tente de novo em alguns segundos.'); return false; } return true; }
+
+function exportInventarioExcel(){
+  if(!_xlsxReady()) return;
+  var cols=[['Código','cod'],['Tipo','type'],['Modelo','model'],['Ano','year'],['Placa','plate'],['VIN/Serial','vin'],['Lonerstar','lonerstar'],['Verizon','verizon'],['Samsung','samsung'],['Bouncie','bouncie'],['E-pass','epass'],['Inspeção','inspecao'],['Camera','camera'],['Placa Nova','placa_nova'],['Proprietário','owner'],['Registration','registration'],['Insurance','insurance'],['Invoice','invoice'],['Data de Compra','dt_compra'],['Valor','valor'],['Bill of Sale','bill_of_sale'],['Manutenção','manutencao'],['Observações','obs']];
+  var dcols={registration:1,insurance:1,dt_compra:1};
+  var rows=(DB.inventory||[]).map(function(i){ var o={}; cols.forEach(function(c){ var v=i[c[1]]; if(dcols[c[1]] && typeof _fmtDateStr==='function') v=_fmtDateStr(v); o[c[0]]=(v==null?'':v); }); return o; });
+  var ws=XLSX.utils.json_to_sheet(rows,{header:cols.map(function(c){return c[0];})});
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Inventário');
+  XLSX.writeFile(wb,'Fleet_Inventario_'+_xlsxDate()+'.xlsx');
+}
+
+function exportEquipesExcel(){
+  if(!_xlsxReady()) return;
+  var det=(DB.assets||[]).map(function(a){ return {'Código':a.cod,'Tipo':a.type,'Modelo':a.model,'Placa':a.plate,'Driver':a.driver||'','Equipe':a.team||'','Supervisor':a.leader||'','Cidade':a.city||'','Estado':a.state||'','Status':(a.status||'').replace(/[✅🟠🟡]/g,'').trim()}; })
+    .sort(function(x,y){ return (x.Equipe||'').localeCompare(y.Equipe||'') || (x['Código']||'').localeCompare(y['Código']||''); });
+  var map={};
+  (DB.assets||[]).forEach(function(a){ var t=a.team||'(sem equipe)'; if(!map[t]) map[t]={Equipe:t,Supervisor:a.leader||'',Total:0,types:{}}; map[t].Total++; map[t].types[a.type]=(map[t].types[a.type]||0)+1; if(!map[t].Supervisor&&a.leader)map[t].Supervisor=a.leader; });
+  var resumo=Object.keys(map).sort().map(function(t){ var m=map[t]; var tipos=Object.keys(m.types).sort().map(function(k){return k+': '+m.types[k];}).join(', '); return {Equipe:m.Equipe,Supervisor:m.Supervisor,'Total de itens':m.Total,'Por tipo':tipos}; });
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Equipamentos');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resumo),'Resumo por equipe');
+  XLSX.writeFile(wb,'Fleet_Equipes_'+_xlsxDate()+'.xlsx');
 }
 
 // Tela de senha (aparece só se a nuvem estiver configurada)
