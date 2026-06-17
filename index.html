@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-A';
+window.__BUILD = '2026-06-17-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -604,7 +604,7 @@ tr.row-pend:hover td{background:#fef9ec}
       <button class="icon-btn" onclick="exportInventarioExcel()" style="margin-left:auto;background:var(--green2);border-color:var(--green);color:var(--green)">📊 Exportar Excel</button>
     </div>
     <table>
-      <thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>Verizon</th><th>E-pass</th><th>Inspeção</th><th>Registration</th><th>Seguro</th><th>Proprietário</th><th>Obs</th><th></th></tr></thead>
+      <thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>VIN/Serial</th><th>Verizon</th><th>E-pass</th><th>Inspeção</th><th>Registration</th><th>Seguro</th><th>Proprietário</th><th>Obs</th><th></th></tr></thead>
       <tbody id="inv-tbody"></tbody>
     </table>
   </div>
@@ -9393,6 +9393,7 @@ function renderInventory() {
       <td style="font-size:11px;color:var(--text3)">${esc(i.type)}</td>
       <td>${esc(i.model)}</td>
       <td style="font-size:12px;font-family:monospace">${esc(i.plate)}</td>
+      <td style="font-size:11px;font-family:monospace;color:var(--text3)">${esc(i.vin)}</td>
       <td>${cellAlert(i.verizon)}</td>
       <td>${cellAlert(i.epass)}</td>
       <td>${cellAlert(i.inspecao)}</td>
