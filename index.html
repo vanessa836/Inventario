@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-C';
+window.__BUILD = '2026-06-17-D';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9388,7 +9388,7 @@ function renderInventory() {
 
   document.getElementById('inv-count').textContent = rows.length + ' itens';
   document.getElementById('inv-tbody').innerHTML = rows.map(i => `
-    <tr>
+    <tr onclick="openInvDetail('${esc(i.cod)}')" style="cursor:pointer">
       <td>${esc(i.cod)}</td>
       <td style="font-size:11px;color:var(--text3)">${esc(i.type)}</td>
       <td>${esc(i.model)}</td>
