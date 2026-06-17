@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-16-A';
+window.__BUILD = '2026-06-17-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10081,7 +10081,7 @@ function openInvDetail(cod) {
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Lonerstar</div>${cellAlert(i.lonerstar)}</div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Samsung</div>${cellAlert(i.samsung)}</div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Camera</div>${cellAlert(i.camera)}</div>
-      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Placa Nova</div><span style="font-size:12px;color:var(--text2)">${esc(i.placa_nova)||'—'}</span></div>
+      <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Placa</div><span style="font-size:12px;color:var(--text2);font-family:monospace">${esc(i.plate)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Invoice</div><span style="font-size:12px;color:var(--text2)">${esc(i.invoice)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Bill of Sale</div><span style="font-size:12px;color:var(--text2)">${esc(i.bill_of_sale)||'—'}</span></div>
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Data de Compra</div><span style="font-size:12px;color:var(--text2)">${esc(_fmtDateStr(i.dt_compra))||'—'}</span></div>
