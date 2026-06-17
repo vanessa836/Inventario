@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-B';
+window.__BUILD = '2026-06-17-C';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 /* SECTIONS */
 .section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;margin-top:24px}
 /* TABLE */
-.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
 .tbl-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .tbl-header input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-size:13px;outline:none;flex:1;max-width:280px}
 .tbl-header input:focus{border-color:var(--blue)}
@@ -9393,7 +9393,7 @@ function renderInventory() {
       <td style="font-size:11px;color:var(--text3)">${esc(i.type)}</td>
       <td>${esc(i.model)}</td>
       <td style="font-size:12px;font-family:monospace">${esc(i.plate)}</td>
-      <td style="font-size:11px;font-family:monospace;color:var(--text3)">${esc(i.vin)}</td>
+      <td style="font-size:11px;font-family:monospace;color:var(--text3);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(i.vin)}">${esc(i.vin)}</td>
       <td>${cellAlert(i.verizon)}</td>
       <td>${cellAlert(i.epass)}</td>
       <td>${cellAlert(i.inspecao)}</td>
