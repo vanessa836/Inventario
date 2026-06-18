@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-F';
+window.__BUILD = '2026-06-17-G';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -604,7 +604,7 @@ tr.row-pend:hover td{background:#fef9ec}
       <button class="icon-btn" onclick="exportInventarioExcel()" style="margin-left:auto;background:var(--green2);border-color:var(--green);color:var(--green)">📊 Exportar Excel</button>
     </div>
     <table>
-      <thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>VIN/Serial</th><th>Inspeção</th><th>Registration</th><th>Seguro</th><th>Proprietário</th></tr></thead>
+      <thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>VIN/Serial</th><th>Inspeção</th><th>Registration</th><th>Seguro</th><th>Proprietário</th><th></th></tr></thead>
       <tbody id="inv-tbody"></tbody>
     </table>
   </div>
@@ -9398,6 +9398,7 @@ function renderInventory() {
       <td style="font-size:12px">${esc(_fmtDateStr(i.registration))}</td>
       <td style="font-size:12px">${esc(_fmtDateStr(i.insurance))}</td>
       <td style="font-size:12px">${esc(i.owner)}</td>
+      <td><button class="icon-btn" onclick="event.stopPropagation();openInvDetail('${esc(i.cod)}')">Ver</button></td>
     </tr>
   `).join('');
 }
