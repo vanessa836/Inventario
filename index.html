@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-H';
+window.__BUILD = '2026-06-18-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9150,19 +9150,40 @@ function openPendencia(field, label){
   var isFalta = function(v){ var s=(v==null?'':String(v)).trim().toUpperCase(); return s==='FALTA' || (field==='verizon' && s==='SEM BATERIA'); };
   var items = I.filter(function(x){ return isFalta(x[field]); })
     .sort(function(a,b){ return String(a.cod).localeCompare(String(b.cod)); });
+  window.__pend = { field: field, label: label, items: items };
   var rows = items.map(function(i){
     var a = (DB.assets||[]).find(function(z){ return z.cod===i.cod; }) || {};
+    var val = (i[field]==null || String(i[field]).trim()==='') ? 'FALTA' : i[field];
     return '<tr style="cursor:pointer" onclick="document.getElementById(\'modal-bg\').classList.remove(\'open\'); openInvDetail(\''+esc(i.cod)+'\')">'
       + '<td>'+esc(i.cod)+'</td><td style="font-size:11px;color:var(--text3)">'+esc(i.type)+'</td><td>'+esc(i.model)+'</td>'
-      + '<td style="font-family:monospace;font-size:12px">'+esc(i.plate)+'</td><td>'+esc(a.team||'')+'</td><td>'+esc(a.leader||'')+'</td></tr>';
+      + '<td style="font-family:monospace;font-size:12px">'+esc(i.plate)+'</td><td>'+esc(a.team||'')+'</td><td>'+esc(a.leader||'')+'</td>'
+      + '<td style="color:#a32d2d;font-weight:600;font-size:12px">'+esc(val)+'</td></tr>';
   }).join('');
   document.getElementById('modal-title').textContent = 'Pendência: ' + label;
   document.getElementById('modal-sub').textContent = items.length + ' item(ns) com ' + label + ' faltando — clique pra abrir';
   document.getElementById('modal-body').innerHTML =
-    '<div class="tbl-wrap" style="max-height:60vh;overflow:auto"><table><thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>Equipe</th><th>Supervisor</th></tr></thead><tbody>'
-    + (rows || '<tr><td colspan="6" style="color:var(--text3)">Nenhum item.</td></tr>')
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="icon-btn" onclick="exportPendenciaExcel()" style="background:var(--green2);border-color:var(--green);color:var(--green)">📊 Exportar Excel</button></div>'
+    + '<div class="tbl-wrap" style="max-height:55vh;overflow:auto"><table><thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>Equipe</th><th>Supervisor</th><th>'+esc(label)+'</th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="7" style="color:var(--text3)">Nenhum item.</td></tr>')
     + '</tbody></table></div>';
   document.getElementById('modal-bg').classList.add('open');
+}
+
+// Exporta a lista da pendência aberta para Excel
+function exportPendenciaExcel(){
+  if (typeof XLSX === 'undefined'){ alert('A planilha ainda está carregando (precisa de internet). Tente de novo em alguns segundos.'); return; }
+  var p = window.__pend; if(!p || !p.items) return;
+  var data = p.items.map(function(i){
+    var a = (DB.assets||[]).find(function(z){ return z.cod===i.cod; }) || {};
+    var val = (i[p.field]==null || String(i[p.field]).trim()==='') ? 'FALTA' : i[p.field];
+    var o = {'Código':i.cod,'Tipo':i.type,'Modelo':i.model,'Placa':i.plate,'Equipe':a.team||'','Supervisor':a.leader||''};
+    o[p.label] = val;
+    return o;
+  });
+  var ws = XLSX.utils.json_to_sheet(data);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pendencia');
+  XLSX.writeFile(wb, 'Fleet_Pendencia_' + String(p.label).replace(/[^A-Za-z0-9]/g,'') + '_' + _xlsxDate() + '.xlsx');
 }
 
 function dashLookup() {
