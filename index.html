@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-17-G';
+window.__BUILD = '2026-06-17-H';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9093,7 +9093,7 @@ function renderDashboard() {
     ['Bill of Sale','bill_of_sale',null],['Bouncie','bouncie',null],['Camera','camera',null],
     ['Lonerstar','lonerstar',null],['Samsung','samsung',null]
   ];
-  const pend = docs.map(d => { const c = I.filter(x => FALTA(x[d[1]], d[2])).length; return {label:d[0], c:c, p: N ? Math.round(100*c/N) : 0}; })
+  const pend = docs.map(d => { const c = I.filter(x => FALTA(x[d[1]], d[2])).length; return {label:d[0], field:d[1], c:c, p: N ? Math.round(100*c/N) : 0}; })
     .filter(x => x.c > 0).sort((a,b) => b.c - a.c);
   const statusOf = p => p > 30 ? ['Crítico','#fcebeb','#a32d2d'] : p >= 15 ? ['Atenção','#faeeda','#854f0b'] : ['OK','#e1f5ee','#0f6e56'];
 
@@ -9121,7 +9121,7 @@ function renderDashboard() {
     + '</div>'
     + '<div class="section-title">Pendências (documentos faltando)</div>'
     + '<div class="tbl-wrap"><table><thead><tr><th>Documento</th><th>Faltando</th><th>%</th><th>Status</th></tr></thead><tbody>'
-    + (pend.map(x => { const s = statusOf(x.p); return '<tr><td>'+x.label+'</td><td>'+x.c+'</td><td>'+x.p+'%</td><td><span style="background:'+s[1]+';color:'+s[2]+';padding:2px 8px;border-radius:6px;font-size:12px">'+s[0]+'</span></td></tr>'; }).join('') || '<tr><td colspan="4" style="color:var(--text3)">Sem pendências.</td></tr>')
+    + (pend.map(x => { const s = statusOf(x.p); return '<tr style="cursor:pointer" title="Clique para ver os itens" onclick="openPendencia(\''+x.field+'\',\''+esc(x.label)+'\')"><td>'+x.label+' ›</td><td>'+x.c+'</td><td>'+x.p+'%</td><td><span style="background:'+s[1]+';color:'+s[2]+';padding:2px 8px;border-radius:6px;font-size:12px">'+s[0]+'</span></td></tr>'; }).join('') || '<tr><td colspan="4" style="color:var(--text3)">Sem pendências.</td></tr>')
     + '</tbody></table></div>'
     + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:14px">'
     + '<div><div class="section-title">Ativos por tipo</div>'+typeArr.map(t => bar(t[0],t[1],maxType,'var(--blue)','')).join('')+'</div>'
@@ -9142,6 +9142,27 @@ function renderDashboard() {
     + '</tbody></table></div>';
 
   document.getElementById('page-dashboard').innerHTML = html;
+}
+
+// Abre a lista de itens que estão com determinada pendência (documento faltando)
+function openPendencia(field, label){
+  var I = DB.inventory || [];
+  var isFalta = function(v){ var s=(v==null?'':String(v)).trim().toUpperCase(); return s==='FALTA' || (field==='verizon' && s==='SEM BATERIA'); };
+  var items = I.filter(function(x){ return isFalta(x[field]); })
+    .sort(function(a,b){ return String(a.cod).localeCompare(String(b.cod)); });
+  var rows = items.map(function(i){
+    var a = (DB.assets||[]).find(function(z){ return z.cod===i.cod; }) || {};
+    return '<tr style="cursor:pointer" onclick="document.getElementById(\'modal-bg\').classList.remove(\'open\'); openInvDetail(\''+esc(i.cod)+'\')">'
+      + '<td>'+esc(i.cod)+'</td><td style="font-size:11px;color:var(--text3)">'+esc(i.type)+'</td><td>'+esc(i.model)+'</td>'
+      + '<td style="font-family:monospace;font-size:12px">'+esc(i.plate)+'</td><td>'+esc(a.team||'')+'</td><td>'+esc(a.leader||'')+'</td></tr>';
+  }).join('');
+  document.getElementById('modal-title').textContent = 'Pendência: ' + label;
+  document.getElementById('modal-sub').textContent = items.length + ' item(ns) com ' + label + ' faltando — clique pra abrir';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="tbl-wrap" style="max-height:60vh;overflow:auto"><table><thead><tr><th>Código</th><th>Tipo</th><th>Modelo</th><th>Placa</th><th>Equipe</th><th>Supervisor</th></tr></thead><tbody>'
+    + (rows || '<tr><td colspan="6" style="color:var(--text3)">Nenhum item.</td></tr>')
+    + '</tbody></table></div>';
+  document.getElementById('modal-bg').classList.add('open');
 }
 
 function dashLookup() {
