@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-18-B';
+window.__BUILD = '2026-06-18-C';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10977,7 +10977,7 @@ function renderPessoas() {
   if (supList) {
     supList.innerHTML = '';
     supervisors.forEach(function(s) {
-      const count = DB.assets.filter(a => a.leader === s).length;
+      const count = DB.assets.filter(a => a.leader === s && (a.type||'') !== 'SEM EQUIPAMENTO').length;
       const row = document.createElement('div');
       row.className = 'person-row';
       row.innerHTML = '<span class="person-name">' + esc(s) + '</span>'
@@ -11000,7 +11000,7 @@ function renderPessoas() {
   if (teamList) {
     teamList.innerHTML = '';
     teams.forEach(function(t) {
-      const count = DB.assets.filter(a => a.team === t).length;
+      const count = DB.assets.filter(a => a.team === t && (a.type||'') !== 'SEM EQUIPAMENTO').length;
       const _tc = teamCode(t);
       const row = document.createElement('div');
       row.className = 'person-row';
