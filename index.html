@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-18-A';
+window.__BUILD = '2026-06-18-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9075,7 +9075,8 @@ function showPage(name) {
 
 // DASHBOARD
 function renderDashboard() {
-  const A = DB.assets || [], I = DB.inventory || [];
+  const A = (DB.assets || []).filter(a => (a.type||'') !== 'SEM EQUIPAMENTO');
+  const I = (DB.inventory || []).filter(i => (i.type||'') !== 'SEM EQUIPAMENTO');
   const N = A.length;
   const invByCod = {}; I.forEach(x => invByCod[x.cod] = x);
   const pref = c => (c || '').split('-')[0];
@@ -9417,6 +9418,7 @@ function renderInventory() {
   const alertF = document.getElementById('inv-alert-filter').value;
 
   let rows = DB.inventory.filter(i => {
+    if ((i.type||'') === 'SEM EQUIPAMENTO') return false; // marcador de equipe vazia não aparece no inventário
     if (typeF && i.type !== typeF) return false;
     if (alertF === 'verizon' && !isIssue(i.verizon)) return false;
     if (alertF === 'epass' && !isIssue(i.epass)) return false;
@@ -9484,7 +9486,8 @@ function renderTeams() {
   DB.assets.forEach(a => {
     if (!a.team || a.team === 'Geral') return;
     if (!teamMap[a.team]) teamMap[a.team] = { team: a.team, leader: a.leader, assets: [], geral: [] };
-    teamMap[a.team].assets.push(a);
+    // Marcador "SEM EQUIPAMENTO" cria a equipe mas NÃO conta como item
+    if ((a.type||'') !== 'SEM EQUIPAMENTO') teamMap[a.team].assets.push(a);
   });
   // Inclui equipes do registro que ainda não têm equipamento
   (DB.teams||[]).forEach(function(ti){
@@ -9656,7 +9659,7 @@ function openSupervisorPopup(supName) {
 
 function openTeamPopup(teamName, leaderName) {
   // Get main team assets — filter by team name only (not leader, to catch newly moved items)
-  let mainAssets = DB.assets.filter(a => a.team === teamName);
+  let mainAssets = DB.assets.filter(a => a.team === teamName && (a.type||'') !== 'SEM EQUIPAMENTO');
   // Derive leader from assets
   if (!leaderName && mainAssets.length > 0) leaderName = mainAssets[0].leader;
   // Get Geral assets using same scoring logic
@@ -11173,7 +11176,7 @@ function exportInventarioExcel(){
   if(!_xlsxReady()) return;
   var cols=[['Código','cod'],['Tipo','type'],['Modelo','model'],['Ano','year'],['Placa','plate'],['VIN/Serial','vin'],['Lonerstar','lonerstar'],['Verizon','verizon'],['Samsung','samsung'],['Bouncie','bouncie'],['E-pass','epass'],['Inspeção','inspecao'],['Camera','camera'],['Placa Nova','placa_nova'],['Proprietário','owner'],['Registration','registration'],['Insurance','insurance'],['Invoice','invoice'],['Data de Compra','dt_compra'],['Valor','valor'],['Bill of Sale','bill_of_sale'],['Manutenção','manutencao'],['Observações','obs']];
   var dcols={registration:1,insurance:1,dt_compra:1};
-  var rows=(DB.inventory||[]).map(function(i){ var o={}; cols.forEach(function(c){ var v=i[c[1]]; if(dcols[c[1]] && typeof _fmtDateStr==='function') v=_fmtDateStr(v); o[c[0]]=(v==null?'':v); }); return o; });
+  var rows=(DB.inventory||[]).filter(function(i){ return (i.type||'')!=='SEM EQUIPAMENTO'; }).map(function(i){ var o={}; cols.forEach(function(c){ var v=i[c[1]]; if(dcols[c[1]] && typeof _fmtDateStr==='function') v=_fmtDateStr(v); o[c[0]]=(v==null?'':v); }); return o; });
   var ws=XLSX.utils.json_to_sheet(rows,{header:cols.map(function(c){return c[0];})});
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Inventário');
   XLSX.writeFile(wb,'Fleet_Inventario_'+_xlsxDate()+'.xlsx');
@@ -11181,10 +11184,11 @@ function exportInventarioExcel(){
 
 function exportEquipesExcel(){
   if(!_xlsxReady()) return;
-  var det=(DB.assets||[]).map(function(a){ return {'Código':a.cod,'Tipo':a.type,'Modelo':a.model,'Placa':a.plate,'Driver':a.driver||'','Equipe':a.team||'','Supervisor':a.leader||'','Cidade':a.city||'','Estado':a.state||'','Status':(a.status||'').replace(/[✅🟠🟡]/g,'').trim()}; })
+  var baseA=(DB.assets||[]).filter(function(a){ return (a.type||'')!=='SEM EQUIPAMENTO'; });
+  var det=baseA.map(function(a){ return {'Código':a.cod,'Tipo':a.type,'Modelo':a.model,'Placa':a.plate,'Driver':a.driver||'','Equipe':a.team||'','Supervisor':a.leader||'','Cidade':a.city||'','Estado':a.state||'','Status':(a.status||'').replace(/[✅🟠🟡]/g,'').trim()}; })
     .sort(function(x,y){ return (x.Equipe||'').localeCompare(y.Equipe||'') || (x['Código']||'').localeCompare(y['Código']||''); });
   var map={};
-  (DB.assets||[]).forEach(function(a){ var t=a.team||'(sem equipe)'; if(!map[t]) map[t]={Equipe:t,Supervisor:a.leader||'',Total:0,types:{}}; map[t].Total++; map[t].types[a.type]=(map[t].types[a.type]||0)+1; if(!map[t].Supervisor&&a.leader)map[t].Supervisor=a.leader; });
+  baseA.forEach(function(a){ var t=a.team||'(sem equipe)'; if(!map[t]) map[t]={Equipe:t,Supervisor:a.leader||'',Total:0,types:{}}; map[t].Total++; map[t].types[a.type]=(map[t].types[a.type]||0)+1; if(!map[t].Supervisor&&a.leader)map[t].Supervisor=a.leader; });
   var resumo=Object.keys(map).sort().map(function(t){ var m=map[t]; var tipos=Object.keys(m.types).sort().map(function(k){return k+': '+m.types[k];}).join(', '); return {Equipe:m.Equipe,Supervisor:m.Supervisor,'Total de itens':m.Total,'Por tipo':tipos}; });
   var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Equipamentos');
