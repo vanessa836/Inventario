@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-F';
+window.__BUILD = '2026-06-22-H';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9236,14 +9236,18 @@ function renderRevisar(){
     var rb = wrap.querySelector('.btn-rev'); if(rb) rb.style.display = 'none';
     // Remove o lápis inicial (atalho de editar) — já existe o botão Editar
     var firstSpan = wrap.querySelector('.popup-asset-row > span'); if(firstSpan && firstSpan.textContent.indexOf('✏')>=0) firstSpan.style.display = 'none';
+    // Esconde o dropdown de status (duplica o selo) — aqui o foco é equipe/local
+    var stSel = wrap.querySelector('.popup-asset-row select'); if(stSel) stSel.style.display = 'none';
     // Barra de ações da revisão
     var teamOpts = '<option value="">(sem equipe — direto com supervisor)</option>' + teams.map(function(t){return '<option value="'+esc(t)+'"'+(t===a.team?' selected':'')+'>'+esc(t)+'</option>';}).join('');
     var supOpts = '<option value="">(manter: '+esc(a.leader||'—')+')</option>' + sups.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
     var bar = document.createElement('div');
-    bar.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:2px 14px 12px';
-    bar.innerHTML = '<span style="font-size:12px;color:var(--text3);margin-right:auto">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.obs?' · <b>Obs:</b> '+esc(a.obs):'')+'</span>'
-      + '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
-      + '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
+    bar.style.cssText = 'padding:2px 14px 12px';
+    bar.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:7px">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.obs?' · <b>Obs:</b> '+esc(a.obs):'')+'</div>'
+      + '<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">'
+      +   '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
+      +   '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
+      + '</div>'
       + '<div class="rev-dir-form" id="rev-dir-'+esc(code)+'" style="display:none">'
       + '<span style="font-size:12px;color:var(--text2)">Equipe:</span><select id="rev-team-'+esc(code)+'">'+teamOpts+'</select>'
       + '<span style="font-size:12px;color:var(--text2)">Supervisor:</span><select id="rev-sup-'+esc(code)+'">'+supOpts+'</select>'
@@ -9836,11 +9840,6 @@ function buildPopupAssetRow(a) {
     +   '</div>'
     + '</div>'
     + statusBadge(a.status)
-    + '<select onclick="event.stopPropagation()" style="font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;outline:none;flex-shrink:0">'
-    +   '<option value="✅ Em Dia" '       + selOk   + '>✅ Em Dia</option>'
-    +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
-    +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
-    + '</select>'
     + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>'
     + '<button class="icon-btn btn-rev" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:#cf1322;border-color:#ff4d4f" title="Equipe ou local errado? Enviar para a aba Revisar">⚠ Revisar</button>';
   const els = div.querySelectorAll('span[title]');
@@ -9942,11 +9941,6 @@ function openTeamPopup(teamName, leaderName) {
       +   '</div>'
       + '</div>'
       + statusBadge(a.status)
-      + '<select onclick="event.stopPropagation()" style="font-size:11px;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;outline:none;flex-shrink:0">'
-      +   '<option value="✅ Em Dia" '       + selOk   + '>✅ Em Dia</option>'
-      +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
-      +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
-      + '</select>'
       + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>';
 
     // Add event listeners after innerHTML (avoids escaping hell)
