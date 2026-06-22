@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-18-C';
+window.__BUILD = '2026-06-20-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -122,6 +122,23 @@ tr.row-pend:hover td{background:#fef9ec}
 .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .team-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
 .team-card:hover{border-color:var(--blue);box-shadow:0 3px 12px rgba(37,99,235,.1);transform:translateY(-1px)}
+.team-card.revisar-hl{background:#fff1f0;border:1.5px solid #ff4d4f;box-shadow:0 0 0 2px rgba(255,77,79,.12)}
+.team-card.revisar-hl .team-card-name{color:#cf1322}
+.team-card.revisar-hl:hover{border-color:#cf1322;box-shadow:0 3px 12px rgba(255,77,79,.25)}
+tr.revisar-hl{background:#fff1f0}
+tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
+.revisar-badge{background:#ff4d4f;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;margin-left:2px}
+.rev-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.rev-row .rev-main{flex:1;min-width:200px}
+.rev-row .rev-code{font-family:monospace;font-weight:700;color:#cf1322}
+.rev-row .rev-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.rev-btn{font-size:12px;border:1px solid var(--border);background:var(--bg2);border-radius:7px;padding:6px 11px;cursor:pointer;font-weight:600}
+.rev-btn.ok{color:#0f6e56;border-color:#9bdcc6}
+.rev-btn.ok:hover{background:#e1f5ee}
+.rev-btn.dir{color:#1d4ed8;border-color:#9db8f5}
+.rev-btn.dir:hover{background:#eaf0ff}
+.rev-dir-form{flex-basis:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding:10px;background:var(--bg3);border-radius:8px}
+.rev-dir-form select{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:160px}
 .team-card-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
 .team-card-leader{font-size:11px;color:var(--text3);margin-bottom:10px}
 .team-card-leader span{color:var(--blue);font-weight:500}
@@ -374,6 +391,10 @@ tr.row-pend:hover td{background:#fef9ec}
   <div class="tab" onclick="showPage('pessoas')" id="tab-pessoas">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>
     Pessoas
+  </div>
+  <div class="tab tab-revisar" onclick="showPage('revisar')" id="tab-revisar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    Revisar <span id="revisar-badge" class="revisar-badge" style="display:none"></span>
   </div>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
     <span id="save-indicator" class="save-indicator saved">✓ Salvo no navegador</span>
@@ -1241,6 +1262,25 @@ tr.row-pend:hover td{background:#fef9ec}
       <div id="driver-list"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- REVISAR PAGE -->
+<div id="page-revisar" class="page">
+  <div style="background:#fff7e6;border:1px solid #ffd591;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#874d00">
+    ⚠️ <b>Caixa de Revisão.</b> Coloque aqui os equipamentos que você não tem certeza de quem é. A equipe/supervisor atual de cada item fica preservada — depois você confirma se está certo ou direciona para o certo.
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <input id="revisar-add-input" list="revisar-add-list" placeholder="Código do equipamento (ex.: TRK-016)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+    <datalist id="revisar-add-list"></datalist>
+    <button class="icon-btn" style="color:#cf1322;border-color:#ff4d4f;font-weight:600;padding:9px 16px" onclick="revisarAdd()">⚠ Enviar para revisão</button>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-header">
+      <span style="font-weight:600;color:var(--text)">Itens em revisão</span>
+      <span id="revisar-count" style="margin-left:auto;color:var(--text3);font-size:13px">0 itens</span>
+    </div>
+    <div id="revisar-list"></div>
   </div>
 </div>
 
@@ -9071,6 +9111,101 @@ function showPage(name) {
     }
   }
   if (name === 'pessoas')    renderPessoas();
+  if (name === 'revisar')    renderRevisar();
+}
+
+// ===== CAIXA DE REVISÃO (aba Revisar) =====
+var REVISAR_REC = '__REVISAR__';
+function revisarRec(){
+  var r = (DB.assets||[]).find(function(a){return a.cod===REVISAR_REC;});
+  if(!r){ r = {cod:REVISAR_REC, type:'SEM EQUIPAMENTO', model:'', plate:'', vin:'', driver:'', team:'', leader:'', city:'', state:'', status:'', obs:''}; DB.assets.push(r); }
+  return r;
+}
+function getReviewList(){
+  var r = (DB.assets||[]).find(function(a){return a.cod===REVISAR_REC;});
+  if(!r || !r.obs) return [];
+  return String(r.obs).split(',').map(function(s){return s.trim();}).filter(Boolean);
+}
+function setReviewList(codes){
+  var r = revisarRec();
+  r.obs = (codes||[]).filter(Boolean).join(',');
+  if (typeof saveData==='function') saveData();
+  updateRevisarBadge();
+}
+function updateRevisarBadge(){
+  var n = getReviewList().length;
+  var b = document.getElementById('revisar-badge');
+  if(b){ if(n>0){ b.textContent=n; b.style.display=''; } else { b.style.display='none'; } }
+}
+function revisarAdd(){
+  var inp = document.getElementById('revisar-add-input');
+  var raw = (inp && inp.value || '').trim().toUpperCase();
+  if(!raw) return;
+  var code = raw.split(' ')[0].split('—')[0].trim();
+  var exists = (DB.assets||[]).some(function(a){return a.cod===code;});
+  if(!exists){ alert('Código não encontrado: '+code); return; }
+  var list = getReviewList();
+  if(list.indexOf(code)>=0){ alert(code+' já está na revisão.'); if(inp) inp.value=''; return; }
+  list.push(code); setReviewList(list);
+  if(inp) inp.value='';
+  renderRevisar();
+}
+function revisarRemove(code){
+  var list = getReviewList().filter(function(c){return c!==code;});
+  setReviewList(list);
+  renderRevisar();
+}
+function revisarToggleDir(code){
+  var f = document.getElementById('rev-dir-'+code);
+  if(f) f.style.display = (f.style.display==='none'||!f.style.display) ? 'flex' : 'none';
+}
+function revisarApplyDir(code){
+  var asset = (DB.assets||[]).find(function(a){return a.cod===code;});
+  if(!asset) return;
+  var teamSel = document.getElementById('rev-team-'+code);
+  var supSel = document.getElementById('rev-sup-'+code);
+  var newTeam = teamSel ? teamSel.value : '';
+  var newSup = supSel ? supSel.value : '';
+  var fromTeam = asset.team || '(sem equipe)';
+  asset.team = newTeam;
+  if(newSup) asset.leader = newSup;
+  DB.history = DB.history || [];
+  DB.history.push({date:new Date().toISOString(), cod:code, from_team:fromTeam, to_team:(newTeam||'(direto)'), obs:'Revisão: direcionado'+(newSup?(' / supervisor '+newSup):'')});
+  revisarRemove(code);
+}
+function renderRevisar(){
+  updateRevisarBadge();
+  // datalist de códigos
+  var dl = document.getElementById('revisar-add-list');
+  if(dl){ dl.innerHTML = (DB.assets||[]).filter(function(a){return a.cod!==REVISAR_REC && (a.type||'')!=='SEM EQUIPAMENTO';})
+      .map(function(a){return '<option value="'+esc(a.cod)+'">'+esc(a.cod)+' — '+esc(a.model||a.type||'')+'</option>';}).join(''); }
+  // listas de teams/supervisores para os selects
+  var teams = [...new Set((DB.assets||[]).map(function(a){return a.team;}).concat(DB.extraTeams||[]).filter(Boolean).filter(function(t){return !isRevisar(t);}))].sort();
+  var sups = [...new Set((DB.assets||[]).map(function(a){return a.leader;}).concat(DB.extraSupervisors||[]).filter(Boolean).filter(function(s){return !isRevisar(s);}))].sort();
+  var list = getReviewList();
+  var byCod = {}; (DB.assets||[]).forEach(function(a){byCod[a.cod]=a;});
+  var cont = document.getElementById('revisar-list');
+  var cnt = document.getElementById('revisar-count');
+  if(cnt) cnt.textContent = list.length + ' itens';
+  if(!cont) return;
+  if(!list.length){ cont.innerHTML = '<p style="padding:16px;color:var(--text3);font-size:13px">Nenhum item em revisão. Use o campo acima para enviar um equipamento que você não tem certeza de quem é.</p>'; return; }
+  cont.innerHTML = list.map(function(code){
+    var a = byCod[code];
+    if(!a) return '<div class="rev-row"><div class="rev-main"><span class="rev-code">'+esc(code)+'</span><div class="rev-sub">item não encontrado</div></div><button class="rev-btn" onclick="revisarRemove(\''+esc(code)+'\')">✕ Tirar</button></div>';
+    var teamOpts = '<option value="">(sem equipe — direto com supervisor)</option>' + teams.map(function(t){return '<option value="'+esc(t)+'"'+(t===a.team?' selected':'')+'>'+esc(t)+'</option>';}).join('');
+    var supOpts = '<option value="">(manter: '+esc(a.leader||'—')+')</option>' + sups.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
+    return '<div class="rev-row">'
+      + '<div class="rev-main"><span class="rev-code">'+esc(code)+'</span> <span style="font-size:12px;color:var(--text2)">'+esc(a.model||a.type||'')+'</span>'
+      + '<div class="rev-sub">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.city?(' · '+esc(a.city)+(a.state?'/'+esc(a.state):'')):'')+'</div></div>'
+      + '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
+      + '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
+      + '<div class="rev-dir-form" id="rev-dir-'+esc(code)+'" style="display:none">'
+      + '<span style="font-size:12px;color:var(--text2)">Equipe:</span><select id="rev-team-'+esc(code)+'">'+teamOpts+'</select>'
+      + '<span style="font-size:12px;color:var(--text2)">Supervisor:</span><select id="rev-sup-'+esc(code)+'">'+supOpts+'</select>'
+      + '<button class="rev-btn dir" onclick="revisarApplyDir(\''+esc(code)+'\')">Salvar</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
 }
 
 // DASHBOARD
@@ -9379,6 +9514,7 @@ function renderAssets() {
   const stateF = document.getElementById('asset-state-filter').value;
 
   let rows = DB.assets.filter(a => {
+    if ((a.type||'') === 'SEM EQUIPAMENTO' || a.cod === '__REVISAR__') return false;
     if (typeF && a.type !== typeF) return false;
     if (leaderF && a.leader !== leaderF) return false;
     if (stateF && a.state !== stateF) return false;
@@ -9477,6 +9613,7 @@ function renderHistory() {
 }
 
 // TEAMS
+function isRevisar(n){ return /revisar/i.test(n||''); }
 function renderTeams() {
   const q = (document.getElementById('teams-search')?.value || '').toLowerCase();
 
@@ -9557,7 +9694,7 @@ function renderTeams() {
     const sup = totalItems > 0 ? t.leader : (_ti.supervisor || t.leader || '—');
     const noteLine = _ti.note ? '<div style="font-size:11px;color:var(--amber);margin-top:2px">' + esc(_ti.note) + '</div>' : '';
     const emptyLine = totalItems === 0 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px">Sem equipamento</div>' : '';
-    return '<div class="team-card" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
+    return '<div class="team-card' + (isRevisar(t.team)?' revisar-hl':'') + '" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
       + '<div class="team-card-name">' + esc(t.team) + codeBadge + geralBadge + '</div>'
       + '<div class="team-card-leader">Supervisor: <span>' + esc(sup) + '</span></div>'
       + noteLine
@@ -9583,7 +9720,7 @@ function renderTeams() {
     supHtml = '<div style="grid-column:1/-1;margin:18px 0 4px;font-size:13px;font-weight:600;color:var(--text2);border-top:1px solid var(--border);padding-top:14px">Supervisores (equipamento direto)</div>'
       + supNames.map(function(s){
           var types = {}; supMap[s].forEach(function(a){ types[a.type] = (types[a.type]||0)+1; });
-          return '<div class="team-card" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
+          return '<div class="team-card' + (isRevisar(s)?' revisar-hl':'') + '" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
             + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
             + '<div class="team-card-pills">'
             + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
@@ -10929,6 +11066,7 @@ function renderCadastros() {
   const typeF = document.getElementById('cad-type-filter')?.value || '';
 
   let rows = DB.assets.filter(function(a) {
+    if ((a.type||'') === 'SEM EQUIPAMENTO' || a.cod === '__REVISAR__') return false;
     if (typeF && a.type !== typeF) return false;
     if (q) {
       const hay = [a.cod, a.type, a.model, a.plate, a.vin, a.year, a.team, a.leader, a.driver, a.city, a.state].join(' ').toLowerCase();
@@ -10980,7 +11118,8 @@ function renderPessoas() {
       const count = DB.assets.filter(a => a.leader === s && (a.type||'') !== 'SEM EQUIPAMENTO').length;
       const row = document.createElement('div');
       row.className = 'person-row';
-      row.innerHTML = '<span class="person-name">' + esc(s) + '</span>'
+      if (isRevisar(s)) { row.style.background = '#fff1f0'; row.style.boxShadow = 'inset 3px 0 0 #ff4d4f'; }
+      row.innerHTML = '<span class="person-name"' + (isRevisar(s)?' style="color:#cf1322;font-weight:600"':'') + '>' + esc(s) + '</span>'
         + '<span class="person-count">' + count + ' itens</span>'
         + '<div class="person-btns">'
         + '<button class="icon-btn" style="font-size:11px">✏ Editar</button>'
@@ -11004,7 +11143,8 @@ function renderPessoas() {
       const _tc = teamCode(t);
       const row = document.createElement('div');
       row.className = 'person-row';
-      row.innerHTML = '<div style="flex:1"><div class="person-name">' + esc(t) + (_tc ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 6px;border-radius:10px;font-weight:600">' + esc(_tc) + '</span>' : '') + '</div></div>'
+      if (isRevisar(t)) { row.style.background = '#fff1f0'; row.style.boxShadow = 'inset 3px 0 0 #ff4d4f'; }
+      row.innerHTML = '<div style="flex:1"><div class="person-name"' + (isRevisar(t)?' style="color:#cf1322;font-weight:600"':'') + '>' + esc(t) + (_tc ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 6px;border-radius:10px;font-weight:600">' + esc(_tc) + '</span>' : '') + '</div></div>'
         + '<span class="person-count">' + count + ' itens</span>'
         + '<div class="person-btns">'
         + '<button class="icon-btn" style="font-size:11px">✏ Editar</button>'
@@ -11154,7 +11294,7 @@ async function importInventarioExcel() {
 }
 
 function rerenderAll() {
-  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams','renderPessoas']
+  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams','renderPessoas','renderRevisar','updateRevisarBadge']
     .forEach(function(fn){ try { if (typeof window[fn] === 'function') window[fn](); } catch(e){} });
   try { if (typeof buildTeamCheckboxes === 'function') buildTeamCheckboxes(''); } catch(e){}
 }
