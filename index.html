@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-A';
+window.__BUILD = '2026-06-22-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -392,10 +392,7 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>
     Pessoas
   </div>
-  <div class="tab tab-revisar" onclick="showPage('revisar')" id="tab-revisar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-    Revisar <span id="revisar-badge" class="revisar-badge" style="display:none"></span>
-  </div>
+  <div id="tab-revisar" onclick="openRevisarPage()" style="display:none"></div>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
     <span id="save-indicator" class="save-indicator saved">✓ Salvo no navegador</span>
     <button class="nav-backup-btn" onclick="exportBackup()" title="Exportar backup dos dados">
@@ -1267,6 +1264,7 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
 
 <!-- REVISAR PAGE -->
 <div id="page-revisar" class="page">
+  <div style="margin-bottom:12px"><button class="icon-btn" onclick="showPageByName('teams')" style="font-size:13px">← Voltar para Equipes</button></div>
   <div style="background:#fff7e6;border:1px solid #ffd591;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#874d00">
     ⚠️ <b>Caixa de Revisão.</b> Coloque aqui os equipamentos que você não tem certeza de quem é. A equipe/supervisor atual de cada item fica preservada — depois você confirma se está certo ou direciona para o certo.
   </div>
@@ -9114,6 +9112,28 @@ function showPage(name) {
   if (name === 'revisar')    renderRevisar();
 }
 
+// Troca de página por nome, sem depender de event.currentTarget (usado em botões internos)
+function showPageByName(name){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(t){ var oc = t.getAttribute('onclick') || ''; if (oc.indexOf("showPage('" + name + "')") >= 0) t.classList.add('active'); });
+  var fn = {dashboard:'renderDashboard',assets:'renderAssets',inventory:'renderInventory',history:'renderHistory',teams:'renderTeams',cadastros:'renderCadastros',pessoas:'renderPessoas'}[name];
+  if (fn && typeof window[fn] === 'function') { try { window[fn](); } catch(e){} }
+  window.scrollTo(0,0);
+}
+
+// Abre a página de Revisão (entrada pelo card no início das Equipes)
+function openRevisarPage(){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var pg = document.getElementById('page-revisar');
+  if (pg) pg.classList.add('active');
+  renderRevisar();
+  window.scrollTo(0,0);
+}
+
 // ===== CAIXA DE REVISÃO (aba Revisar) =====
 var REVISAR_REC = '__REVISAR__';
 function revisarRec(){
@@ -9223,7 +9243,7 @@ function revisarToast(msg){
   var b = document.createElement('button');
   b.textContent = 'Abrir Revisar';
   b.style.cssText = 'background:#fff;color:#cf1322;border:none;border-radius:7px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px';
-  b.onclick = function(){ var tab = document.getElementById('tab-revisar'); if (tab) tab.click(); t.style.display = 'none'; };
+  b.onclick = function(){ openRevisarPage(); t.style.display = 'none'; };
   t.appendChild(b);
   t.style.display = 'flex';
   clearTimeout(window.__revToastT);
@@ -9749,7 +9769,13 @@ function renderTeams() {
             + '</div></div>';
         }).join('');
   }
-  grid.innerHTML = ((teamHtml || '') + supHtml) || '<p style="color:var(--text3);font-size:13px">Nenhum resultado.</p>';
+  var revCount = (typeof getReviewList === 'function') ? getReviewList().length : 0;
+  var revisarCard = '<div class="team-card revisar-hl" onclick="openRevisarPage()" title="Abrir a caixa de revisão">'
+    + '<div class="team-card-name">⚠️ REVISAR' + (revCount ? ' <span class="revisar-badge">' + revCount + '</span>' : '') + '</div>'
+    + '<div class="team-card-leader" style="color:#cf1322">Equipe ou local em dúvida</div>'
+    + '<div style="font-size:11px;color:var(--text3);margin-top:4px">' + (revCount ? revCount + ' em revisão' : 'clique para abrir') + '</div>'
+    + '</div>';
+  grid.innerHTML = revisarCard + (teamHtml || '') + supHtml;
 }
 
 
@@ -10563,6 +10589,13 @@ function openEditPopup(cod) {
   // Add delete button safely
   const delContainer = document.getElementById('ep-delete-btn') || document.getElementById('ep-delete-btn2');
   if (delContainer && !isNew) {
+    const revBtn = document.createElement('button');
+    revBtn.className = 'btn';
+    revBtn.style.cssText = 'color:#cf1322;border:1px solid #ff4d4f;background:#fff1f0;margin-bottom:8px;display:block';
+    revBtn.textContent = '⚠ Enviar para Revisar';
+    revBtn.title = 'Equipe ou local errado? Marca o item para revisão.';
+    revBtn.onclick = function() { revisarFromRow(cod, null); document.getElementById('edit-popup-bg').classList.remove('open'); };
+    delContainer.appendChild(revBtn);
     const delBtn = document.createElement('button');
     delBtn.className = 'btn-delete';
     delBtn.textContent = '🗑 Excluir item';
