@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-E';
+window.__BUILD = '2026-06-22-F';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9234,12 +9234,14 @@ function renderRevisar(){
     wrap.appendChild(buildPopupAssetRow(a));
     // Esconde o botão "⚠ Revisar" aqui (já está em revisão)
     var rb = wrap.querySelector('.btn-rev'); if(rb) rb.style.display = 'none';
+    // Remove o lápis inicial (atalho de editar) — já existe o botão Editar
+    var firstSpan = wrap.querySelector('.popup-asset-row > span'); if(firstSpan && firstSpan.textContent.indexOf('✏')>=0) firstSpan.style.display = 'none';
     // Barra de ações da revisão
     var teamOpts = '<option value="">(sem equipe — direto com supervisor)</option>' + teams.map(function(t){return '<option value="'+esc(t)+'"'+(t===a.team?' selected':'')+'>'+esc(t)+'</option>';}).join('');
     var supOpts = '<option value="">(manter: '+esc(a.leader||'—')+')</option>' + sups.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
     var bar = document.createElement('div');
     bar.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:2px 14px 12px';
-    bar.innerHTML = '<span style="font-size:12px;color:var(--text3);margin-right:auto">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b></span>'
+    bar.innerHTML = '<span style="font-size:12px;color:var(--text3);margin-right:auto">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.obs?' · <b>Obs:</b> '+esc(a.obs):'')+'</span>'
       + '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
       + '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
       + '<div class="rev-dir-form" id="rev-dir-'+esc(code)+'" style="display:none">'
