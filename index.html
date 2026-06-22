@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-D';
+window.__BUILD = '2026-06-22-E';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9221,26 +9221,35 @@ function renderRevisar(){
   if(cnt) cnt.textContent = list.length + ' itens';
   if(!cont) return;
   if(!list.length){ cont.innerHTML = '<p style="padding:16px;color:var(--text3);font-size:13px">Nenhum item em revisão. Use o campo acima para enviar um equipamento que você não tem certeza de quem é.</p>'; return; }
-  cont.innerHTML = list.map(function(code){
+  cont.innerHTML = '';
+  list.forEach(function(code){
     var a = byCod[code];
-    if(!a) return '<div class="rev-row"><div class="rev-main"><span class="rev-code">'+esc(code)+'</span><div class="rev-sub">item não encontrado</div></div><button class="rev-btn" onclick="revisarRemove(\''+esc(code)+'\')">✕ Tirar</button></div>';
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'border-bottom:1px solid var(--border)';
+    if(!a){
+      wrap.innerHTML = '<div style="padding:11px 14px;font-size:13px;color:var(--text2)"><b style="color:#cf1322">'+esc(code)+'</b> — item não encontrado <button class="rev-btn" onclick="revisarRemove(\''+esc(code)+'\')">✕ Tirar</button></div>';
+      cont.appendChild(wrap); return;
+    }
+    // Linha no MESMO formato dos demais (com botão ✏ Editar, que dá acesso à observação)
+    wrap.appendChild(buildPopupAssetRow(a));
+    // Esconde o botão "⚠ Revisar" aqui (já está em revisão)
+    var rb = wrap.querySelector('.btn-rev'); if(rb) rb.style.display = 'none';
+    // Barra de ações da revisão
     var teamOpts = '<option value="">(sem equipe — direto com supervisor)</option>' + teams.map(function(t){return '<option value="'+esc(t)+'"'+(t===a.team?' selected':'')+'>'+esc(t)+'</option>';}).join('');
     var supOpts = '<option value="">(manter: '+esc(a.leader||'—')+')</option>' + sups.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
-    return '<div class="rev-row">'
-      + '<div class="rev-main"><span class="rev-code">'+esc(code)+'</span> <span style="font-size:12px;color:var(--text2)">'+esc(a.model||a.type||'')+'</span>'
-      + '<div class="rev-sub">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.city?(' · '+esc(a.city)+(a.state?'/'+esc(a.state):'')):'')+'</div></div>'
+    var bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:2px 14px 12px';
+    bar.innerHTML = '<span style="font-size:12px;color:var(--text3);margin-right:auto">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b></span>'
       + '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
       + '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
-      + '<div class="rev-obs-wrap"><label>Observação:</label>'
-      +   '<input class="rev-obs" type="text" value="'+esc(a.obs||'')+'" placeholder="Anote aqui o motivo da dúvida, local provável, etc." onclick="event.stopPropagation()" onchange="revisarSetObs(\''+esc(code)+'\', this.value)">'
-      + '</div>'
       + '<div class="rev-dir-form" id="rev-dir-'+esc(code)+'" style="display:none">'
       + '<span style="font-size:12px;color:var(--text2)">Equipe:</span><select id="rev-team-'+esc(code)+'">'+teamOpts+'</select>'
       + '<span style="font-size:12px;color:var(--text2)">Supervisor:</span><select id="rev-sup-'+esc(code)+'">'+supOpts+'</select>'
       + '<button class="rev-btn dir" onclick="revisarApplyDir(\''+esc(code)+'\')">Salvar</button>'
-      + '</div>'
       + '</div>';
-  }).join('');
+    wrap.appendChild(bar);
+    cont.appendChild(wrap);
+  });
 }
 
 // Envia um equipamento para a aba Revisar a partir de uma linha (equipe/supervisor)
