@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-H';
+window.__BUILD = '2026-06-22-I';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9225,7 +9225,7 @@ function renderRevisar(){
   list.forEach(function(code){
     var a = byCod[code];
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'border-bottom:1px solid var(--border)';
+    wrap.style.cssText = 'border-bottom:1px solid var(--border);padding:6px 18px';
     if(!a){
       wrap.innerHTML = '<div style="padding:11px 14px;font-size:13px;color:var(--text2)"><b style="color:#cf1322">'+esc(code)+'</b> — item não encontrado <button class="rev-btn" onclick="revisarRemove(\''+esc(code)+'\')">✕ Tirar</button></div>';
       cont.appendChild(wrap); return;
@@ -9242,7 +9242,7 @@ function renderRevisar(){
     var teamOpts = '<option value="">(sem equipe — direto com supervisor)</option>' + teams.map(function(t){return '<option value="'+esc(t)+'"'+(t===a.team?' selected':'')+'>'+esc(t)+'</option>';}).join('');
     var supOpts = '<option value="">(manter: '+esc(a.leader||'—')+')</option>' + sups.map(function(s){return '<option value="'+esc(s)+'">'+esc(s)+'</option>';}).join('');
     var bar = document.createElement('div');
-    bar.style.cssText = 'padding:2px 14px 12px';
+    bar.style.cssText = 'padding:2px 0 6px';
     bar.innerHTML = '<div style="font-size:12px;color:var(--text3);margin-bottom:7px">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.obs?' · <b>Obs:</b> '+esc(a.obs):'')+'</div>'
       + '<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">'
       +   '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
