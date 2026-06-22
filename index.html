@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-B';
+window.__BUILD = '2026-06-22-C';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -139,6 +139,9 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
 .rev-btn.dir:hover{background:#eaf0ff}
 .rev-dir-form{flex-basis:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding:10px;background:var(--bg3);border-radius:8px}
 .rev-dir-form select{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:160px}
+.rev-obs-wrap{flex-basis:100%;display:flex;gap:8px;align-items:center;margin-top:8px}
+.rev-obs-wrap label{font-size:12px;color:var(--text2);white-space:nowrap}
+.rev-obs{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px}
 .team-card-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
 .team-card-leader{font-size:11px;color:var(--text3);margin-bottom:10px}
 .team-card-leader span{color:var(--blue);font-weight:500}
@@ -9175,6 +9178,12 @@ function revisarRemove(code){
   setReviewList(list);
   renderRevisar();
 }
+function revisarSetObs(code, val){
+  var a = (DB.assets||[]).find(function(x){return x.cod===code;});
+  if(!a) return;
+  a.obs = val;
+  if (typeof saveData==='function') saveData();
+}
 function revisarToggleDir(code){
   var f = document.getElementById('rev-dir-'+code);
   if(f) f.style.display = (f.style.display==='none'||!f.style.display) ? 'flex' : 'none';
@@ -9219,6 +9228,9 @@ function renderRevisar(){
       + '<div class="rev-sub">Atual — Equipe: <b>'+esc(a.team||'(direto)')+'</b> · Supervisor: <b>'+esc(a.leader||'—')+'</b>'+(a.city?(' · '+esc(a.city)+(a.state?'/'+esc(a.state):'')):'')+'</div></div>'
       + '<button class="rev-btn ok" onclick="revisarRemove(\''+esc(code)+'\')" title="Manter como está e tirar da revisão">✔ Está certo</button>'
       + '<button class="rev-btn dir" onclick="revisarToggleDir(\''+esc(code)+'\')">➡ Direcionar</button>'
+      + '<div class="rev-obs-wrap"><label>Observação:</label>'
+      +   '<input class="rev-obs" type="text" value="'+esc(a.obs||'')+'" placeholder="Anote aqui o motivo da dúvida, local provável, etc." onclick="event.stopPropagation()" onchange="revisarSetObs(\''+esc(code)+'\', this.value)">'
+      + '</div>'
       + '<div class="rev-dir-form" id="rev-dir-'+esc(code)+'" style="display:none">'
       + '<span style="font-size:12px;color:var(--text2)">Equipe:</span><select id="rev-team-'+esc(code)+'">'+teamOpts+'</select>'
       + '<span style="font-size:12px;color:var(--text2)">Supervisor:</span><select id="rev-sup-'+esc(code)+'">'+supOpts+'</select>'
