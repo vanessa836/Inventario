@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-I';
+window.__BUILD = '2026-06-22-J';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9764,7 +9764,8 @@ function renderTeams() {
       ? ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 6px;border-radius:10px;font-weight:500">+Geral</span>'
       : '';
     const _ti = (DB.teams||[]).find(function(x){return x.name===t.team;}) || {};
-    const codeBadge = _ti.code ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 7px;border-radius:10px;font-weight:600">' + esc(_ti.code) + '</span>' : '';
+    const _code = teamCode(t.team);
+    const codeBadge = _code ? ' <span style="font-size:10px;background:var(--bg3);color:var(--text2);padding:1px 7px;border-radius:10px;font-weight:600">' + esc(_code) + '</span>' : '';
     const sup = totalItems > 0 ? t.leader : (_ti.supervisor || t.leader || '—');
     const noteLine = _ti.note ? '<div style="font-size:11px;color:var(--amber);margin-top:2px">' + esc(_ti.note) + '</div>' : '';
     const emptyLine = totalItems === 0 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px">Sem equipamento</div>' : '';
@@ -11336,9 +11337,16 @@ async function cloudPull(opts) {
 }
 
 // ===== REGISTRO DE EQUIPES (código, supervisor, observação — mesmo sem equipamento) =====
+// Códigos de equipe (crew) — fonte fixa no app (o registro na nuvem não persiste)
+var TEAM_CODES = {
+  'Enoe':'PC-16', 'Maikel':'PC-26', 'Junior':'PCSJ-D-05', 'Juan Carlos':'HH-05',
+  'Baratela':'PC-17', 'Luis Lucas':'PCSJ-D-06', 'Tadeu':'PCS-39', 'Hysmael':'HH-06',
+  'Fherdin':'SUB-25', 'Wladimir':'PCS-24', 'Esteban':'PC-40', 'Saturnino':'HH-04',
+  'Jose Silva':'PC-02', 'Adilson':'HH-02', 'Cristian':'HH-01', 'Sidney':'HH-03'
+};
 function teamReg(){ DB.teams = DB.teams || []; return DB.teams; }
 function teamEntry(name){ return teamReg().find(function(t){ return t.name === name; }); }
-function teamCode(name){ var e = teamEntry(name); return e && e.code ? e.code : ''; }
+function teamCode(name){ var e = teamEntry(name); if (e && e.code) return e.code; return TEAM_CODES[name] || ''; }
 async function pushTeams(){
   if(!_cloudOn) return;
   try { await cloudCall({ action:'setTeams', teams: teamReg() }); } catch(e){}
