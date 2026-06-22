@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-20-B';
+window.__BUILD = '2026-06-22-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9208,6 +9208,28 @@ function renderRevisar(){
   }).join('');
 }
 
+// Envia um equipamento para a aba Revisar a partir de uma linha (equipe/supervisor)
+function revisarFromRow(cod, btnEl){
+  var list = getReviewList();
+  if (list.indexOf(cod) < 0) { list.push(cod); setReviewList(list); }
+  if (btnEl) { btnEl.textContent = '✓ Em revisão'; btnEl.style.background = '#fff1f0'; btnEl.disabled = true; btnEl.style.opacity = '0.8'; }
+  revisarToast(cod + ' enviado para Revisar');
+}
+function revisarToast(msg){
+  var t = document.getElementById('revisar-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'revisar-toast'; document.body.appendChild(t); }
+  t.style.cssText = 'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#cf1322;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:99999;display:flex;gap:12px;align-items:center';
+  t.innerHTML = '<span>⚠ ' + esc(msg) + '</span>';
+  var b = document.createElement('button');
+  b.textContent = 'Abrir Revisar';
+  b.style.cssText = 'background:#fff;color:#cf1322;border:none;border-radius:7px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px';
+  b.onclick = function(){ var tab = document.getElementById('tab-revisar'); if (tab) tab.click(); t.style.display = 'none'; };
+  t.appendChild(b);
+  t.style.display = 'flex';
+  clearTimeout(window.__revToastT);
+  window.__revToastT = setTimeout(function(){ if (t) t.style.display = 'none'; }, 5000);
+}
+
 // DASHBOARD
 function renderDashboard() {
   const A = (DB.assets || []).filter(a => (a.type||'') !== 'SEM EQUIPAMENTO');
@@ -9763,13 +9785,15 @@ function buildPopupAssetRow(a) {
     +   '<option value="🟠 Em andamento" ' + selWarn + '>🟠 Andamento</option>'
     +   '<option value="🟡 Pendente" '     + selPend + '>🟡 Pendente</option>'
     + '</select>'
-    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>';
+    + '<button class="icon-btn" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:var(--blue);border-color:var(--blue)">✏ Editar</button>'
+    + '<button class="icon-btn btn-rev" style="font-size:11px;padding:3px 8px;flex-shrink:0;color:#cf1322;border-color:#ff4d4f" title="Equipe ou local errado? Enviar para a aba Revisar">⚠ Revisar</button>';
   const els = div.querySelectorAll('span[title]');
   if (els[0]) els[0].onclick = function(e) { e.stopPropagation(); editField(a.cod, 'plate', this); };
   const sel = div.querySelector('select');
   if (sel) sel.onchange = function() { updateAssetStatus(a.cod, this.value); };
   const btns = div.querySelectorAll('button');
   if (btns[0]) btns[0].onclick = function(e) { e.stopPropagation(); openEditPopup(a.cod); };
+  if (btns[1]) btns[1].onclick = function(e) { e.stopPropagation(); revisarFromRow(a.cod, this); };
   return div;
 }
 
