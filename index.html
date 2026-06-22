@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-K';
+window.__BUILD = '2026-06-22-L';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9804,11 +9804,15 @@ function renderTeams() {
             + '</div></div>';
         }).join('');
   }
-  var revCount = (typeof getReviewList === 'function') ? getReviewList().length : 0;
+  var revList = (typeof getReviewList === 'function') ? getReviewList() : [];
+  var revAssets = (DB.assets || []).filter(function(a){ return revList.indexOf(a.cod) >= 0 && (a.type||'') !== 'SEM EQUIPAMENTO'; });
+  var revTypes = {}; revAssets.forEach(function(a){ revTypes[a.type] = (revTypes[a.type]||0) + 1; });
+  var revPills = Object.entries(revTypes).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('');
   var revisarCard = '<div class="team-card revisar-hl" onclick="openRevisarPage()" title="Abrir a caixa de revisão">'
-    + '<div class="team-card-name">⚠️ REVISAR' + (revCount ? ' <span class="revisar-badge">' + revCount + '</span>' : '') + '</div>'
+    + '<div class="team-card-name">⚠️ REVISAR' + (revList.length ? ' <span class="revisar-badge">' + revList.length + '</span>' : '') + '</div>'
     + '<div class="team-card-leader" style="color:#cf1322">Equipe ou local em dúvida</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:4px">' + (revCount ? revCount + ' em revisão' : 'clique para abrir') + '</div>'
+    + '<div class="team-card-pills">' + revPills + '</div>'
+    + (revList.length ? '' : '<div style="font-size:11px;color:var(--text3);margin-top:4px">clique para abrir</div>')
     + '</div>';
   grid.innerHTML = revisarCard + (teamHtml || '') + supHtml;
 }
