@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-C';
+window.__BUILD = '2026-06-22-D';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9149,6 +9149,9 @@ function getReviewList(){
   if(!r || !r.obs) return [];
   return String(r.obs).split(',').map(function(s){return s.trim();}).filter(Boolean);
 }
+// Conjunto de códigos que estão em revisão (para esconder das equipes — um ou outro)
+function reviewSet(){ var s={}; getReviewList().forEach(function(c){ s[c]=1; }); return s; }
+function inRevisao(cod){ return !!reviewSet()[cod]; }
 function setReviewList(codes){
   var r = revisarRec();
   r.obs = (codes||[]).filter(Boolean).join(',');
@@ -9673,9 +9676,11 @@ function renderTeams() {
 
   // Build team map — simple grouping by team name only
   // Geral items are handled separately at display time, not stored in teamMap
+  const _revS = reviewSet();
   const teamMap = {};
   DB.assets.forEach(a => {
     if (!a.team || a.team === 'Geral') return;
+    if (_revS[a.cod]) return; // em revisão: não aparece na equipe (um ou outro)
     if (!teamMap[a.team]) teamMap[a.team] = { team: a.team, leader: a.leader, assets: [], geral: [] };
     // Marcador "SEM EQUIPAMENTO" cria a equipe mas NÃO conta como item
     if ((a.type||'') !== 'SEM EQUIPAMENTO') teamMap[a.team].assets.push(a);
@@ -9693,7 +9698,7 @@ function renderTeams() {
     const sameLeaderTeams = Object.values(teamMap).filter(t => t.leader === leader);
     if (sameLeaderTeams.length <= 1) {
       // Only one team for this leader — all Geral items go here
-      return DB.assets.filter(a => a.team === 'Geral' && a.leader === leader);
+      return DB.assets.filter(a => a.team === 'Geral' && a.leader === leader && !_revS[a.cod]);
     }
     // Multiple teams — score to find best match
     const leaderParts = (leader || '').toLowerCase().split(' ');
@@ -9706,7 +9711,7 @@ function renderTeams() {
       score -= t.team.length * 0.1;
       if (score > bestScore) { bestScore = score; bestTeam = t.team; }
     });
-    return bestTeam === team ? DB.assets.filter(a => a.team === 'Geral' && a.leader === leader) : [];
+    return bestTeam === team ? DB.assets.filter(a => a.team === 'Geral' && a.leader === leader && !_revS[a.cod]) : [];
   }
 
   // Attach geral to each team
@@ -9760,6 +9765,8 @@ function renderTeams() {
   // Seção separada: supervisores com equipamento direto (sem equipe)
   var supMap = {};
   DB.assets.forEach(function(a){
+    if (_revS[a.cod]) return; // em revisão: não aparece (um ou outro)
+    if ((a.type||'') === 'SEM EQUIPAMENTO' || a.cod === '__REVISAR__') return;
     if ((!a.team || !String(a.team).trim()) && a.leader && String(a.leader).trim()) {
       (supMap[a.leader] = supMap[a.leader] || []).push(a);
     }
@@ -9837,7 +9844,7 @@ function buildPopupAssetRow(a) {
 
 // Pop-up de supervisor (equipamento direto: leader = nome e sem team)
 function openSupervisorPopup(supName) {
-  var assets = DB.assets.filter(function(a){ return (a.leader||'')===supName && (!a.team || !String(a.team).trim()); });
+  var assets = DB.assets.filter(function(a){ return (a.leader||'')===supName && (!a.team || !String(a.team).trim()) && !inRevisao(a.cod) && (a.type||'')!=='SEM EQUIPAMENTO'; });
   if (!assets.length) return;
   var trucks   = assets.filter(function(a){return a.type==='TRUCK';}).length;
   var trailers = assets.filter(function(a){return a.type==='TRAILER';}).length;
@@ -9857,8 +9864,9 @@ function openSupervisorPopup(supName) {
 }
 
 function openTeamPopup(teamName, leaderName) {
+  const _rs = reviewSet();
   // Get main team assets — filter by team name only (not leader, to catch newly moved items)
-  let mainAssets = DB.assets.filter(a => a.team === teamName && (a.type||'') !== 'SEM EQUIPAMENTO');
+  let mainAssets = DB.assets.filter(a => a.team === teamName && (a.type||'') !== 'SEM EQUIPAMENTO' && !_rs[a.cod]);
   // Derive leader from assets
   if (!leaderName && mainAssets.length > 0) leaderName = mainAssets[0].leader;
   // Get Geral assets using same scoring logic
@@ -9867,7 +9875,7 @@ function openTeamPopup(teamName, leaderName) {
     const sameLeaderTeams = DB.assets.filter(a => a.team !== 'Geral' && a.leader === leaderName)
       .reduce(function(acc, a) { if (!acc.includes(a.team)) acc.push(a.team); return acc; }, []);
     if (sameLeaderTeams.length <= 1) {
-      geralAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName);
+      geralAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName && !_rs[a.cod]);
     } else {
       const leaderParts = leaderName.toLowerCase().split(' ');
       let bestScore = -999; let bestTeam = null;
@@ -9880,11 +9888,11 @@ function openTeamPopup(teamName, leaderName) {
         if (score > bestScore) { bestScore = score; bestTeam = tn; }
       });
       if (bestTeam === teamName) {
-        geralAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName);
+        geralAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName && !_rs[a.cod]);
       }
     }
   }
-  if (teamName === 'Geral') { mainAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName); geralAssets = []; }
+  if (teamName === 'Geral') { mainAssets = DB.assets.filter(a => a.team === 'Geral' && a.leader === leaderName && !_rs[a.cod]); geralAssets = []; }
 
   const allAssets = mainAssets.concat(geralAssets);
   if (!allAssets.length) return;
@@ -11184,7 +11192,7 @@ function renderPessoas() {
   if (supList) {
     supList.innerHTML = '';
     supervisors.forEach(function(s) {
-      const count = DB.assets.filter(a => a.leader === s && (a.type||'') !== 'SEM EQUIPAMENTO').length;
+      const count = DB.assets.filter(a => a.leader === s && (a.type||'') !== 'SEM EQUIPAMENTO' && !inRevisao(a.cod)).length;
       const row = document.createElement('div');
       row.className = 'person-row';
       if (isRevisar(s)) { row.style.background = '#fff1f0'; row.style.boxShadow = 'inset 3px 0 0 #ff4d4f'; }
@@ -11208,7 +11216,7 @@ function renderPessoas() {
   if (teamList) {
     teamList.innerHTML = '';
     teams.forEach(function(t) {
-      const count = DB.assets.filter(a => a.team === t && (a.type||'') !== 'SEM EQUIPAMENTO').length;
+      const count = DB.assets.filter(a => a.team === t && (a.type||'') !== 'SEM EQUIPAMENTO' && !inRevisao(a.cod)).length;
       const _tc = teamCode(t);
       const row = document.createElement('div');
       row.className = 'person-row';
