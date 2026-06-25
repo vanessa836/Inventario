@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-L';
+window.__BUILD = '2026-06-22-M';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -640,7 +640,7 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
       <button class="icon-btn" onclick="openNewHistory()">+ Nova movimentação</button>
     </div>
     <table>
-      <thead><tr><th>Código</th><th>De</th><th>Para</th><th>Data</th><th>Observações</th></tr></thead>
+      <thead><tr><th>Código</th><th>De</th><th>Para</th><th>Data</th><th>Observações</th><th>Ações</th></tr></thead>
       <tbody id="hist-tbody">
     <tr>
       <td>VAC-003</td>
@@ -9668,20 +9668,39 @@ function cellAlert(v) {
 // HISTORY TABLE
 function renderHistory() {
   const q = document.getElementById('hist-search').value.toLowerCase();
-  let rows = [...DB.history].reverse().filter(h => {
+  let rows = DB.history.map((h, i) => ({ h: h, i: i })).reverse().filter(o => {
     if (!q) return true;
-    return [h.cod, h.from_team, h.to_team, h.obs].join(' ').toLowerCase().includes(q);
+    return [o.h.cod, o.h.from_team, o.h.to_team, o.h.obs].join(' ').toLowerCase().includes(q);
   });
   document.getElementById('hist-count').textContent = rows.length + ' registros';
-  document.getElementById('hist-tbody').innerHTML = rows.map(h => `
+  document.getElementById('hist-tbody').innerHTML = rows.map(o => { var h = o.h; return `
     <tr>
       <td>${esc(h.cod)}</td>
       <td>${esc(h.from_team)}</td>
       <td>${esc(h.to_team)}</td>
       <td>${esc(_fmtDateStr(h.date))}</td>
       <td style="font-size:11px;color:var(--text3)">${esc(h.obs)}</td>
+      <td style="display:flex;gap:4px"><button class="icon-btn" style="font-size:11px;color:var(--blue)" onclick="editHistory(${o.i})">✏</button><button class="icon-btn" style="font-size:11px;color:var(--red)" onclick="deleteHistory(${o.i})">🗑</button></td>
     </tr>
-  `).join('');
+  `; }).join('');
+}
+function deleteHistory(idx){
+  var h = DB.history[idx]; if(!h) return;
+  if(!confirm('Excluir este registro do histórico?\n\n'+(h.cod||'')+' · '+(h.from_team||'')+' → '+(h.to_team||'')+' · '+_fmtDateStr(h.date))) return;
+  DB.history.splice(idx, 1);
+  if (typeof saveData==='function') saveData();
+  renderHistory();
+}
+function editHistory(idx){
+  var h = DB.history[idx]; if(!h) return;
+  var cod = prompt('Código:', h.cod||''); if(cod===null) return;
+  var from = prompt('De (equipe de origem):', h.from_team||''); if(from===null) return;
+  var to = prompt('Para (equipe de destino):', h.to_team||''); if(to===null) return;
+  var date = prompt('Data:', _fmtDateStr(h.date)||h.date||''); if(date===null) return;
+  var obs = prompt('Observações:', h.obs||''); if(obs===null) return;
+  h.cod=cod.trim(); h.from_team=from.trim(); h.to_team=to.trim(); h.date=date.trim(); h.obs=obs.trim();
+  if (typeof saveData==='function') saveData();
+  renderHistory();
 }
 
 // TEAMS
