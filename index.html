@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-Q';
+window.__BUILD = '2026-06-23-A';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -378,6 +378,14 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
   <div class="tab" onclick="showPage('inventory')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="1"></rect><line x1="9" y1="12" x2="15" y2="12"></line><line x1="9" y1="16" x2="12" y2="16"></line></svg>
     Inventário
+  </div>
+  <div class="tab" onclick="showPage('manutencao')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-2.4 2.5-2.5z"></path></svg>
+    Manutenção
+  </div>
+  <div class="tab" onclick="showPage('lavagem')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13c3-3 5-3 9 0s6 3 9 0"></path><path d="M3 18c3-3 5-3 9 0s6 3 9 0"></path><path d="M12 3v6"></path></svg>
+    Lavagem
   </div>
   <div class="tab" onclick="showPage('history')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -1282,6 +1290,39 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
       <span id="revisar-count" style="margin-left:auto;color:var(--text3);font-size:13px">0 itens</span>
     </div>
     <div id="revisar-list"></div>
+  </div>
+</div>
+
+<!-- MANUTENÇÃO PAGE -->
+<div id="page-manutencao" class="page">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <input id="manut-add-input" list="manut-add-list" placeholder="Adicionar item à oficina (ex.: TRK-003)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+    <datalist id="manut-add-list"></datalist>
+    <button class="icon-btn" style="color:#854f0b;border-color:#e0a93b;font-weight:600;padding:9px 16px" onclick="manutAdd()">🔧 Adicionar à manutenção</button>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-header">
+      <span style="font-weight:600;color:var(--text)">Em manutenção / oficina</span>
+      <span id="manut-count" style="margin-left:auto;color:var(--text3);font-size:13px">0 itens</span>
+    </div>
+    <div id="manut-list"></div>
+  </div>
+</div>
+
+<!-- LAVAGEM PAGE -->
+<div id="page-lavagem" class="page">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <input id="lav-add-input" list="lav-add-list" placeholder="Registrar lavagem de um item (ex.: TRK-007)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+    <datalist id="lav-add-list"></datalist>
+    <button class="icon-btn" style="color:#0f6e56;border-color:#9bdcc6;font-weight:600;padding:9px 16px" onclick="lavAddNew()">🧼 Registrar lavagem</button>
+  </div>
+  <div id="lav-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-header">
+      <span style="font-weight:600;color:var(--text)">Histórico de lavagens</span>
+      <span id="lav-count" style="margin-left:auto;color:var(--text3);font-size:13px">0 itens</span>
+    </div>
+    <div id="lav-list"></div>
   </div>
 </div>
 
@@ -9113,6 +9154,144 @@ function showPage(name) {
   }
   if (name === 'pessoas')    renderPessoas();
   if (name === 'revisar')    renderRevisar();
+  if (name === 'manutencao') renderManutencao();
+  if (name === 'lavagem')    renderLavagem();
+}
+
+// ===== MANUTENÇÃO + LAVAGEM (dados sincronizados em registro oculto) =====
+var MW_REC = '__MAINTWASH__';
+function mwRec(){
+  var r = (DB.assets||[]).find(function(a){return a.cod===MW_REC;});
+  if(!r){ r = {cod:MW_REC, type:'SEM EQUIPAMENTO', model:'', plate:'', vin:'', driver:'', team:'', leader:'', city:'', state:'', status:'', obs:'{}'}; DB.assets.push(r); }
+  return r;
+}
+function getMW(){
+  var r = (DB.assets||[]).find(function(a){return a.cod===MW_REC;});
+  if(!r || !r.obs) return {};
+  try { return JSON.parse(r.obs) || {}; } catch(e){ return {}; }
+}
+function setMW(data){
+  var r = mwRec();
+  r.obs = JSON.stringify(data||{});
+  if (typeof saveData==='function') saveData();
+}
+function mwGet(cod){ var d=getMW(); return d[cod] || {m:null, w:[]}; }
+function mwSet(cod, entry){ var d=getMW(); d[cod]=entry; if(!entry || ((!entry.m||!entry.m.status&&!entry.m.sit&&!entry.m.local) && (!entry.w||!entry.w.length))) { delete d[cod]; } setMW(d); }
+
+// ---- MANUTENÇÃO ----
+function manutAdd(){
+  var inp=document.getElementById('manut-add-input'); var raw=(inp&&inp.value||'').trim().toUpperCase();
+  if(!raw) return; var code=raw.split(' ')[0].split('—')[0].trim();
+  if(!(DB.assets||[]).some(function(a){return a.cod===code;}) && !(DB.inventory||[]).some(function(i){return i.cod===code;})){ alert('Código não encontrado: '+code); return; }
+  manutEdit(code); if(inp) inp.value='';
+}
+function manutEdit(code){
+  var e=mwGet(code); var m=e.m||{};
+  var status=prompt('Status da manutenção (ex.: Em manutenção, Pronta, Funcionando, Desmontado, Pendente peça, Necessita reparo):', m.status||''); if(status===null) return;
+  var sit=prompt('Situação / serviço necessário:', m.sit||''); if(sit===null) return;
+  var local=prompt('Responsável / Local (opcional, ex.: Alberto):', m.local||''); if(local===null) return;
+  e.m={status:status.trim(), sit:sit.trim(), local:local.trim()};
+  mwSet(code, e); renderManutencao();
+}
+function manutRemove(code){
+  if(!confirm('Tirar '+code+' da manutenção?')) return;
+  var e=mwGet(code); e.m=null; mwSet(code, e); renderManutencao();
+}
+function _mwModel(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.model||a.model||''; }
+function _mwType(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.type||a.type||''; }
+function _statusColor(st){ var s=(st||'').toLowerCase();
+  if(s.indexOf('funcion')>=0||s.indexOf('pronta')>=0) return ['#e1f5ee','#0f6e56'];
+  if(s.indexOf('desmont')>=0||s.indexOf('refazer')>=0||s.indexOf('motor')>=0) return ['#fcebeb','#a32d2d'];
+  return ['#faeeda','#854f0b']; }
+function renderManutencao(){
+  var d=getMW();
+  var dl=document.getElementById('manut-add-list');
+  if(dl){ dl.innerHTML=(DB.inventory||[]).filter(function(i){return (i.type||'')!=='SEM EQUIPAMENTO'&&i.cod!==MW_REC;}).map(function(i){return '<option value="'+esc(i.cod)+'">'+esc(i.cod)+' — '+esc(i.model||'')+'</option>';}).join(''); }
+  var cods=Object.keys(d).filter(function(c){return d[c].m && (d[c].m.status||d[c].m.sit||d[c].m.local);}).sort();
+  var cont=document.getElementById('manut-list'); var cnt=document.getElementById('manut-count');
+  if(cnt) cnt.textContent=cods.length+' itens';
+  if(!cont) return;
+  if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhum item em manutenção. Use o campo acima para adicionar.</p>'; return; }
+  cont.innerHTML=cods.map(function(c){ var m=d[c].m; var col=_statusColor(m.status);
+    return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div></div>'
+      + '<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(m.status||'—')+'</span>'
+      + '<div style="flex:1;min-width:180px;font-size:12px;color:var(--text2)">'+esc(m.sit||'')+(m.local?' <span style="color:var(--text3)">· '+esc(m.local)+'</span>':'')+'</div>'
+      + '<button class="icon-btn" style="font-size:11px;color:var(--blue)" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
+      + '<button class="icon-btn" style="font-size:11px;color:var(--red)" onclick="manutRemove(\''+esc(c)+'\')">✓ Saiu</button>'
+      + '</div>';
+  }).join('');
+}
+
+// ---- LAVAGEM ----
+function lavAddNew(){
+  var inp=document.getElementById('lav-add-input'); var raw=(inp&&inp.value||'').trim().toUpperCase();
+  if(!raw) return; var code=raw.split(' ')[0].split('—')[0].trim();
+  if(!(DB.assets||[]).some(function(a){return a.cod===code;}) && !(DB.inventory||[]).some(function(i){return i.cod===code;})){ alert('Código não encontrado: '+code); return; }
+  lavAddDate(code); if(inp) inp.value='';
+}
+function lavAddDate(code){
+  var hoje=new Date(); var def=(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][hoje.getMonth()])+'/'+('0'+hoje.getDate()).slice(-2)+'/'+hoje.getFullYear();
+  var data=prompt('Data da lavagem:', def); if(data===null) return;
+  var asset=(DB.assets||[]).find(function(a){return a.cod===code;})||{};
+  var respDef = asset.team ? ('Equipe '+asset.team) : (asset.leader||'Yard');
+  var resp=prompt('Onde/com quem estava no dia (ex.: Yard, Lucas, Equipe '+(asset.team||'X')+'):', respDef); if(resp===null) return;
+  var valor=''; if(/equipe/i.test(resp)){ valor=prompt('Valor descontado da equipe (US$) — deixe vazio se não houver:', ''); if(valor===null) valor=''; }
+  var e=mwGet(code); e.w=e.w||[]; e.w.push({d:data.trim(), r:resp.trim(), v:(valor||'').trim()});
+  mwSet(code, e); renderLavagem();
+}
+function lavRemoveDate(code, idx){
+  var e=mwGet(code); if(!e.w||!e.w[idx]) return;
+  if(!confirm('Remover esta lavagem de '+code+'?')) return;
+  e.w.splice(idx,1); mwSet(code, e); renderLavagem();
+}
+function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
+// Resumo de manutenção + lavagem para o popup de detalhe do item
+function mwSummaryHtml(cod){
+  var e=mwGet(cod); var out='';
+  if(e.m && (e.m.status||e.m.sit||e.m.local)){ var col=_statusColor(e.m.status);
+    out+='<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px">'
+      +'<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">🔧 Manutenção</div>'
+      +'<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(e.m.status||'—')+'</span>'
+      +(e.m.sit?' <span style="color:var(--text2)">'+esc(e.m.sit)+'</span>':'')
+      +(e.m.local?' <span style="color:var(--text3)">· '+esc(e.m.local)+'</span>':'')
+      +'</div>';
+  }
+  if(e.w && e.w.length){
+    out+='<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px">'
+      +'<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">🧼 Lavagens ('+e.w.length+')</div>'
+      +e.w.map(function(w){ return '<div style="color:var(--text2)">• '+esc(w.d)+' — '+esc(w.r||'—')+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</div>'; }).join('')
+      +'</div>';
+  }
+  return out;
+}
+function renderLavagem(){
+  var d=getMW();
+  var dl=document.getElementById('lav-add-list');
+  if(dl){ dl.innerHTML=(DB.inventory||[]).filter(function(i){return (i.type||'')!=='SEM EQUIPAMENTO'&&i.cod!==MW_REC;}).map(function(i){return '<option value="'+esc(i.cod)+'">'+esc(i.cod)+' — '+esc(i.model||'')+'</option>';}).join(''); }
+  var cods=Object.keys(d).filter(function(c){return d[c].w && d[c].w.length;}).sort();
+  var cont=document.getElementById('lav-list'); var cnt=document.getElementById('lav-count');
+  if(cnt) cnt.textContent=cods.length+' itens';
+  // resumo: total de lavagens e total por equipe
+  var totalLav=0, porEquipe={};
+  cods.forEach(function(c){ d[c].w.forEach(function(w){ totalLav++; if(/equipe/i.test(w.r||'')){ var k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; porEquipe[k]=(porEquipe[k]||0)+_money(w.v); } }); });
+  var sum=document.getElementById('lav-summary');
+  if(sum){ var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">Total de lavagens</div><div style="font-size:20px;font-weight:700;color:var(--text)">'+totalLav+'</div></div>';
+    Object.keys(porEquipe).sort().forEach(function(k){ if(porEquipe[k]>0) html+='<div style="background:#e1f5ee;border:1px solid #9bdcc6;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#0f6e56;text-transform:uppercase">'+esc(k)+'</div><div style="font-size:16px;font-weight:700;color:#0f6e56">US$ '+porEquipe[k].toFixed(2)+'</div></div>'; });
+    sum.innerHTML=html; }
+  if(!cont) return;
+  if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma lavagem registrada. Use o campo acima para registrar.</p>'; return; }
+  cont.innerHTML=cods.map(function(c){ var ws=d[c].w;
+    var rows=ws.map(function(w,idx){ return '<div style="display:flex;gap:10px;align-items:center;font-size:12px;padding:3px 0">'
+      + '<span style="font-weight:600;color:var(--text2);min-width:130px">'+esc(w.d)+'</span>'
+      + '<span style="flex:1;color:var(--text2)">'+esc(w.r||'—')+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
+      + '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button></div>'; }).join('');
+    return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
+      + '<span style="font-size:11px;color:var(--text3)">'+ws.length+'x</span>'
+      + '<button class="icon-btn" style="font-size:11px;margin-left:auto;color:#0f6e56;border-color:#9bdcc6" onclick="lavAddDate(\''+esc(c)+'\')">+ nova lavagem</button></div>'
+      + rows + '</div>';
+  }).join('');
 }
 
 // Troca de página por nome, sem depender de event.currentTarget (usado em botões internos)
@@ -10375,6 +10554,7 @@ function openInvDetail(cod) {
       <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Valor</div>${fmtInfo(i.valor)}</div>
     </div>
     ${i.obs ? `<div style="background:var(--amber2);color:var(--amber);padding:8px 12px;border-radius:7px;font-size:12px;margin-bottom:14px">${esc(i.obs)}</div>` : ''}
+    ${mwSummaryHtml(cod)}
     ${a ? `
     <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Alocação atual</div>
@@ -11418,7 +11598,7 @@ async function importInventarioExcel() {
 }
 
 function rerenderAll() {
-  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams','renderPessoas','renderRevisar','updateRevisarBadge']
+  ['populateFilters','populateBulkTeams','populateSupervisorSelect','renderDashboard','renderAssets','renderInventory','renderHistory','renderTeams','renderPessoas','renderRevisar','updateRevisarBadge','renderManutencao','renderLavagem']
     .forEach(function(fn){ try { if (typeof window[fn] === 'function') window[fn](); } catch(e){} });
   try { if (typeof buildTeamCheckboxes === 'function') buildTeamCheckboxes(''); } catch(e){}
 }
