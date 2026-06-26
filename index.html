@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-A';
+window.__BUILD = '2026-06-23-B';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9194,7 +9194,7 @@ function manutEdit(code){
   mwSet(code, e); renderManutencao();
 }
 function manutRemove(code){
-  if(!confirm('Tirar '+code+' da manutenção?')) return;
+  if(!confirm('Concluir a manutenção de '+code+'? (sai da lista de manutenção)')) return;
   var e=mwGet(code); e.m=null; mwSet(code, e); renderManutencao();
 }
 function _mwModel(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.model||a.model||''; }
@@ -9218,7 +9218,7 @@ function renderManutencao(){
       + '<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(m.status||'—')+'</span>'
       + '<div style="flex:1;min-width:180px;font-size:12px;color:var(--text2)">'+esc(m.sit||'')+(m.local?' <span style="color:var(--text3)">· '+esc(m.local)+'</span>':'')+'</div>'
       + '<button class="icon-btn" style="font-size:11px;color:var(--blue)" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
-      + '<button class="icon-btn" style="font-size:11px;color:var(--red)" onclick="manutRemove(\''+esc(c)+'\')">✓ Saiu</button>'
+      + '<button class="icon-btn" style="font-size:11px;color:var(--green)" onclick="manutRemove(\''+esc(c)+'\')">✓ Concluído</button>'
       + '</div>';
   }).join('');
 }
