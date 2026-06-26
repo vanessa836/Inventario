@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-B';
+window.__BUILD = '2026-06-23-C';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10363,6 +10363,11 @@ function openAssetDetail(idx) {
     </div>
     ${invItem.obs ? '<div style="background:var(--bg3);padding:8px 12px;border-radius:7px;font-size:11px;color:var(--text2);margin-bottom:16px">'+esc(invItem.obs)+'</div>' : ''}
     ` : ''}
+    ${mwSummaryHtml(a.cod)}
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="icon-btn" style="font-size:12px;color:#854f0b;border-color:#e0a93b" onclick="manutEdit('${esc(a.cod)}')">🔧 Manutenção</button>
+      <button class="icon-btn" style="font-size:12px;color:#0f6e56;border-color:#9bdcc6" onclick="lavAddDate('${esc(a.cod)}')">🧼 Registrar lavagem</button>
+    </div>
     <div class="section-title">Histórico de movimentação</div>
     <div style="max-height:200px;overflow-y:auto">
       ${histItems.length === 0 ? '<p style="color:var(--text3);font-size:12px">Nenhum registro encontrado.</p>' :
@@ -10555,6 +10560,10 @@ function openInvDetail(cod) {
     </div>
     ${i.obs ? `<div style="background:var(--amber2);color:var(--amber);padding:8px 12px;border-radius:7px;font-size:12px;margin-bottom:14px">${esc(i.obs)}</div>` : ''}
     ${mwSummaryHtml(cod)}
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="icon-btn" style="font-size:12px;color:#854f0b;border-color:#e0a93b" onclick="manutEdit('${esc(cod)}')">🔧 Manutenção</button>
+      <button class="icon-btn" style="font-size:12px;color:#0f6e56;border-color:#9bdcc6" onclick="lavAddDate('${esc(cod)}')">🧼 Registrar lavagem</button>
+    </div>
     ${a ? `
     <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Alocação atual</div>
