@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-22-P';
+window.__BUILD = '2026-06-22-Q';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9668,9 +9668,9 @@ function cellAlert(v) {
 // Formata um valor informativo padronizando N/A (sutil) e vazio (—). mono=true para VIN/Placa.
 function fmtInfo(v, mono) {
   var s = (v === undefined || v === null) ? '' : String(v).trim();
-  if (s === '' || s === '—') return '<span style="font-size:12px;color:var(--text3)">—</span>';
+  if (s === '' || s === '—') return '<span style="font-size:11px;color:var(--text3)">—</span>';
   if (s.toUpperCase() === 'N/A') return '<span class="text-muted" style="font-size:11px">N/A</span>';
-  return '<span style="font-size:' + (mono ? '11px' : '12px') + ';color:var(--text2)' + (mono ? ';font-family:monospace' : '') + '">' + esc(v) + '</span>';
+  return '<span style="font-size:11px;color:var(--text2)' + (mono ? ';font-family:monospace' : '') + '">' + esc(v) + '</span>';
 }
 
 // HISTORY TABLE
