@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-K';
+window.__BUILD = '2026-06-23-L';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9276,6 +9276,8 @@ function lavEditDate(code, idx){
   mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
+// Direção do valor da lavagem: Externa = pago (a terceiro); Re-lavagem = cobrado (da equipe)
+function _washDir(w){ if(!w) return ''; if(w.t==='Externa') return 'pago'; if(w.t==='Re-lavagem') return 'cobrado'; return ''; }
 // Atualiza na hora o popup de detalhe aberto (Inventário ou Movimentação) após editar manut/lavagem
 function _refreshOpenItemPopup(cod){
   try{
@@ -9312,11 +9314,16 @@ function renderLavagem(){
   var cont=document.getElementById('lav-list'); var cnt=document.getElementById('lav-count');
   if(cnt) cnt.textContent=cods.length+' itens';
   // resumo: total de lavagens e total por equipe
-  var totalLav=0, porEquipe={};
-  cods.forEach(function(c){ d[c].w.forEach(function(w){ totalLav++; if(/equipe/i.test(w.r||'')){ var k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; porEquipe[k]=(porEquipe[k]||0)+_money(w.v); } }); });
+  var totalLav=0, pago=0, porEquipe={};
+  cods.forEach(function(c){ var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{}; d[c].w.forEach(function(w){ totalLav++;
+    var dir=_washDir(w); var val=_money(w.v);
+    if(dir==='pago'){ pago+=val; }
+    else if(dir==='cobrado'){ var k; if(/equipe/i.test(w.r||'')) k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; else k=_a.team||w.r||'(sem equipe)'; porEquipe[k]=(porEquipe[k]||0)+val; }
+  }); });
   var sum=document.getElementById('lav-summary');
   if(sum){ var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">Total de lavagens</div><div style="font-size:20px;font-weight:700;color:var(--text)">'+totalLav+'</div></div>';
-    Object.keys(porEquipe).sort().forEach(function(k){ if(porEquipe[k]>0) html+='<div style="background:#e1f5ee;border:1px solid #9bdcc6;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#0f6e56;text-transform:uppercase">'+esc(k)+'</div><div style="font-size:16px;font-weight:700;color:#0f6e56">US$ '+porEquipe[k].toFixed(2)+'</div></div>'; });
+    if(pago>0) html+='<div style="background:#fcebeb;border:1px solid #f0b4b4;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#a32d2d;text-transform:uppercase">Pago a terceiros</div><div style="font-size:16px;font-weight:700;color:#a32d2d">US$ '+pago.toFixed(2)+'</div></div>';
+    Object.keys(porEquipe).sort().forEach(function(k){ if(porEquipe[k]>0) html+='<div style="background:#e1f5ee;border:1px solid #9bdcc6;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#0f6e56;text-transform:uppercase">Cobrado · '+esc(k)+'</div><div style="font-size:16px;font-weight:700;color:#0f6e56">US$ '+porEquipe[k].toFixed(2)+'</div></div>'; });
     sum.innerHTML=html; }
   if(!cont) return;
   if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma lavagem registrada. Use o campo acima para registrar.</p>'; return; }
@@ -9334,7 +9341,7 @@ function renderLavagem(){
       + '<div style="display:flex;gap:10px;align-items:center;font-size:12px">'
       +   '<span style="font-weight:600;color:var(--text2);min-width:110px">'+esc(w.d)+'</span>'
       +   tipoBadge
-      +   '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
+      +   '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?(function(){var dir=_washDir(w);var cl=dir==='pago'?'#a32d2d':'#0f6e56';return ' <b style="color:'+cl+'">· US$ '+esc(w.v)+(dir?' ('+dir+')':'')+'</b>';})():'')+'</span>'
       +   '<button class="icon-btn" style="font-size:10px;color:var(--blue)" onclick="lavEditDate(\''+esc(c)+'\','+idx+')">✏ editar</button>'
       +   '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button>'
       + '</div>'
