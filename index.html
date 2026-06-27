@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-M';
+window.__BUILD = '2026-06-23-N';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9277,7 +9277,7 @@ function lavEditDate(code, idx){
 }
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
 // Direção do valor da lavagem: Externa = pago (a terceiro); Re-lavagem = cobrado (da equipe)
-function _washDir(w){ if(!w) return ''; if(w.t==='Externa') return 'pago'; if(w.t==='Re-lavagem') return 'cobrado'; return ''; }
+function _washDir(w){ if(!w) return ''; if(w.t==='Externa') return 'pago'; if(w.t==='Re-lavagem') return 'cobrado'; if(_money(w.v)>0) return 'cobrado'; return ''; }
 // Atualiza na hora o popup de detalhe aberto (Inventário ou Movimentação) após editar manut/lavagem
 function _refreshOpenItemPopup(cod){
   try{
