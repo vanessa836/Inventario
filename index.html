@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-D';
+window.__BUILD = '2026-06-23-E';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -1299,6 +1299,8 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
     <input id="manut-add-input" list="manut-add-list" placeholder="Adicionar item à oficina (ex.: TRK-003)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
     <datalist id="manut-add-list"></datalist>
     <button class="icon-btn" style="color:#854f0b;border-color:#e0a93b;font-weight:600;padding:9px 16px" onclick="manutAdd()">🔧 Adicionar à manutenção</button>
+    <button class="icon-btn" style="color:#0f6e56;border-color:#9bdcc6;font-weight:600;padding:9px 14px" onclick="exportManutencaoExcel()">📊 Exportar Excel</button>
+    <button class="icon-btn" style="padding:9px 14px" onclick="printManutencao()">🖨 Imprimir</button>
   </div>
   <div class="tbl-wrap">
     <div class="tbl-header">
@@ -1315,6 +1317,8 @@ tr.revisar-hl td:first-child{box-shadow:inset 3px 0 0 #ff4d4f}
     <input id="lav-add-input" list="lav-add-list" placeholder="Registrar lavagem de um item (ex.: TRK-007)" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px">
     <datalist id="lav-add-list"></datalist>
     <button class="icon-btn" style="color:#0f6e56;border-color:#9bdcc6;font-weight:600;padding:9px 16px" onclick="lavAddNew()">🧼 Registrar lavagem</button>
+    <button class="icon-btn" style="color:#0f6e56;border-color:#9bdcc6;font-weight:600;padding:9px 14px" onclick="exportLavagemExcel()">📊 Exportar Excel</button>
+    <button class="icon-btn" style="padding:9px 14px" onclick="printLavagem()">🖨 Imprimir</button>
   </div>
   <div id="lav-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
   <div class="tbl-wrap">
@@ -9213,12 +9217,15 @@ function renderManutencao(){
   if(!cont) return;
   if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhum item em manutenção. Use o campo acima para adicionar.</p>'; return; }
   cont.innerHTML=cods.map(function(c){ var m=d[c].m; var col=_statusColor(m.status);
-    return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:11px 16px;border-bottom:1px solid var(--border)">'
-      + '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div></div>'
-      + '<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(m.status||'—')+'</span>'
-      + '<div style="flex:1;min-width:180px;font-size:12px;color:var(--text2)">'+esc(m.sit||'')+(m.local?' <span style="color:var(--text3)">· '+esc(m.local)+'</span>':'')+'</div>'
-      + '<button class="icon-btn" style="font-size:11px;color:var(--blue)" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
-      + '<button class="icon-btn" style="font-size:11px;color:var(--green)" onclick="manutRemove(\''+esc(c)+'\')">✓ Concluído</button>'
+    return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">'
+      +   '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div></div>'
+      +   '<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(m.status||'—')+'</span>'
+      +   (m.local?'<span style="font-size:12px;color:var(--text3)">Resp.: '+esc(m.local)+'</span>':'')
+      +   '<button class="icon-btn" style="font-size:11px;color:var(--blue);margin-left:auto" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
+      +   '<button class="icon-btn" style="font-size:11px;color:var(--green)" onclick="manutRemove(\''+esc(c)+'\')">✓ Concluído</button>'
+      + '</div>'
+      + (m.sit?'<div style="background:var(--amber2);color:var(--amber);padding:8px 12px;border-radius:7px;font-size:12px;line-height:1.5">'+esc(m.sit)+'</div>':'')
       + '</div>';
   }).join('');
 }
@@ -11656,6 +11663,43 @@ function exportEquipesExcel(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Equipamentos');
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resumo),'Resumo por equipe');
   XLSX.writeFile(wb,'Fleet_Equipes_'+_xlsxDate()+'.xlsx');
+}
+
+function exportManutencaoExcel(){
+  if(!_xlsxReady()) return;
+  var d=getMW();
+  var rows=Object.keys(d).filter(function(c){return d[c].m&&(d[c].m.status||d[c].m.sit||d[c].m.local);}).sort().map(function(c){var m=d[c].m;return {'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Status':m.status||'','Situação / Serviço':m.sit||'','Responsável/Local':m.local||''};});
+  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Manutenção');
+  XLSX.writeFile(wb,'Fleet_Manutencao_'+_xlsxDate()+'.xlsx');
+}
+function exportLavagemExcel(){
+  if(!_xlsxReady()) return;
+  var d=getMW(); var det=[]; var porEq={};
+  Object.keys(d).filter(function(c){return d[c].w&&d[c].w.length;}).sort().forEach(function(c){
+    d[c].w.forEach(function(w){ det.push({'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Data':w.d||'','Responsável/Local':w.r||'','Valor (US$)':w.v||''});
+      if(/equipe/i.test(w.r||'')){ var k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; porEq[k]=(porEq[k]||0)+_money(w.v); } });
+  });
+  var resumo=Object.keys(porEq).sort().map(function(k){return {'Equipe':k,'Total descontado (US$)':porEq[k].toFixed(2)};});
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Lavagens');
+  if(resumo.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resumo),'Total por equipe');
+  XLSX.writeFile(wb,'Fleet_Lavagem_'+_xlsxDate()+'.xlsx');
+}
+function printManutencao(){
+  var d=getMW(); var cods=Object.keys(d).filter(function(c){return d[c].m&&(d[c].m.status||d[c].m.sit||d[c].m.local);}).sort();
+  var html='<div class="report-header"><div class="report-title">Manutenção / Oficina</div><div style="font-size:12px;color:#666">'+cods.length+' itens · '+new Date().toLocaleDateString('pt-BR')+'</div></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:2px solid #1a1d2e;text-align:left"><th style="padding:6px">Código</th><th>Tipo</th><th>Modelo</th><th>Status</th><th>Situação / Serviço</th><th>Resp.</th></tr></thead><tbody>';
+  cods.forEach(function(c){var m=d[c].m;html+='<tr style="border-bottom:1px solid #ddd"><td style="padding:6px"><b>'+esc(c)+'</b></td><td>'+esc(_mwType(c))+'</td><td>'+esc(_mwModel(c))+'</td><td>'+esc(m.status||'')+'</td><td>'+esc(m.sit||'')+'</td><td>'+esc(m.local||'')+'</td></tr>';});
+  html+='</tbody></table>';
+  var r=document.getElementById('print-report'); r.innerHTML=html; r.style.display='block'; window.print(); setTimeout(function(){r.style.display='none';},1000);
+}
+function printLavagem(){
+  var d=getMW(); var cods=Object.keys(d).filter(function(c){return d[c].w&&d[c].w.length;}).sort();
+  var html='<div class="report-header"><div class="report-title">Lavagem / Higienização</div><div style="font-size:12px;color:#666">'+new Date().toLocaleDateString('pt-BR')+'</div></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:2px solid #1a1d2e;text-align:left"><th style="padding:6px">Código</th><th>Tipo</th><th>Modelo</th><th>Data</th><th>Responsável/Local</th><th>Valor (US$)</th></tr></thead><tbody>';
+  cods.forEach(function(c){ d[c].w.forEach(function(w){ html+='<tr style="border-bottom:1px solid #ddd"><td style="padding:6px"><b>'+esc(c)+'</b></td><td>'+esc(_mwType(c))+'</td><td>'+esc(_mwModel(c))+'</td><td>'+esc(w.d||'')+'</td><td>'+esc(w.r||'')+'</td><td>'+esc(w.v||'')+'</td></tr>'; }); });
+  html+='</tbody></table>';
+  var r=document.getElementById('print-report'); r.innerHTML=html; r.style.display='block'; window.print(); setTimeout(function(){r.style.display='none';},1000);
 }
 
 // Tela de senha (aparece só se a nuvem estiver configurada)
