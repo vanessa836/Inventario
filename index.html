@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-L';
+window.__BUILD = '2026-06-23-M';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9313,40 +9313,25 @@ function renderLavagem(){
   var cods=Object.keys(d).filter(function(c){return d[c].w && d[c].w.length;}).sort();
   var cont=document.getElementById('lav-list'); var cnt=document.getElementById('lav-count');
   if(cnt) cnt.textContent=cods.length+' itens';
-  // resumo: total de lavagens e total por equipe
-  var totalLav=0, pago=0, porEquipe={};
-  cods.forEach(function(c){ var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{}; d[c].w.forEach(function(w){ totalLav++;
-    var dir=_washDir(w); var val=_money(w.v);
-    if(dir==='pago'){ pago+=val; }
-    else if(dir==='cobrado'){ var k; if(/equipe/i.test(w.r||'')) k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; else k=_a.team||w.r||'(sem equipe)'; porEquipe[k]=(porEquipe[k]||0)+val; }
-  }); });
-  var sum=document.getElementById('lav-summary');
-  if(sum){ var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">Total de lavagens</div><div style="font-size:20px;font-weight:700;color:var(--text)">'+totalLav+'</div></div>';
-    if(pago>0) html+='<div style="background:#fcebeb;border:1px solid #f0b4b4;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#a32d2d;text-transform:uppercase">Pago a terceiros</div><div style="font-size:16px;font-weight:700;color:#a32d2d">US$ '+pago.toFixed(2)+'</div></div>';
-    Object.keys(porEquipe).sort().forEach(function(k){ if(porEquipe[k]>0) html+='<div style="background:#e1f5ee;border:1px solid #9bdcc6;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#0f6e56;text-transform:uppercase">Cobrado · '+esc(k)+'</div><div style="font-size:16px;font-weight:700;color:#0f6e56">US$ '+porEquipe[k].toFixed(2)+'</div></div>'; });
-    sum.innerHTML=html; }
+  renderLavSummary();
   if(!cont) return;
   if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma lavagem registrada. Use o campo acima para registrar.</p>'; return; }
   cont.innerHTML=cods.map(function(c){ var ws=d[c].w;
     var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{};
     var rows=ws.map(function(w,idx){
-      var who, atual='';
-      if(w.r && String(w.r).trim()){ who=esc(w.r); }
-      else if(_a.team){ var _cc=(typeof teamCode==='function'?teamCode(_a.team):''); who='Equipe '+esc(_a.team)+(_cc?' ('+esc(_cc)+')':''); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
-      else if(_a.leader){ who=esc(_a.leader); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
-      else { who='—'; }
-      var tc = w.t==='Externa'?['#faeeda','#854f0b']:(w.t==='Re-lavagem'?['#fcebeb','#a32d2d']:['#e1f5ee','#0f6e56']);
-      var tipoBadge = w.t?'<span style="font-size:10px;font-weight:600;background:'+tc[0]+';color:'+tc[1]+';padding:1px 7px;border-radius:6px;white-space:nowrap">'+esc(w.t)+'</span>':'';
-      return '<div style="padding:5px 0;border-top:1px dashed var(--border)">'
-      + '<div style="display:flex;gap:10px;align-items:center;font-size:12px">'
-      +   '<span style="font-weight:600;color:var(--text2);min-width:110px">'+esc(w.d)+'</span>'
-      +   tipoBadge
-      +   '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?(function(){var dir=_washDir(w);var cl=dir==='pago'?'#a32d2d':'#0f6e56';return ' <b style="color:'+cl+'">· US$ '+esc(w.v)+(dir?' ('+dir+')':'')+'</b>';})():'')+'</span>'
-      +   '<button class="icon-btn" style="font-size:10px;color:var(--blue)" onclick="lavEditDate(\''+esc(c)+'\','+idx+')">✏ editar</button>'
-      +   '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button>'
-      + '</div>'
-      + (w.o?'<div style="font-size:11px;color:var(--text3);margin:2px 0 0 110px">'+esc(w.o)+'</div>':'')
-      + '</div>'; }).join('');
+      var dir=_washDir(w); var cl=dir==='pago'?'#a32d2d':(dir==='cobrado'?'#0f6e56':'var(--text3)');
+      var crewHint=''; if(!(w.r&&String(w.r).trim())){ if(_a.team){var _cc=(typeof teamCode==='function'?teamCode(_a.team):'');crewHint='Equipe '+_a.team+(_cc?' ('+_cc+')':'')+' (atual)';} else if(_a.leader){crewHint=_a.leader+' (atual)';} }
+      function opt(v,lbl){ return '<option value="'+v+'"'+(w.t===v?' selected':'')+'>'+lbl+'</option>'; }
+      var inp='font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg2)';
+      return '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:5px 0;border-top:1px dashed var(--border)">'
+       + '<input value="'+esc(w.d||'')+'" title="Data" onchange="lavField(\''+esc(c)+'\','+idx+',\'d\',this.value)" style="width:115px;'+inp+'">'
+       + '<select title="Tipo" onchange="lavTipoField(\''+esc(c)+'\','+idx+',this.value)" style="'+inp+'">'+opt('','— tipo')+opt('Interna','Interna')+opt('Externa','Externa $75')+opt('Re-lavagem','Re-lavagem $150')+'</select>'
+       + '<input value="'+esc(w.r||'')+'" placeholder="'+(crewHint?esc(crewHint):'responsável/equipe')+'" title="Responsável / quem estava" onchange="lavField(\''+esc(c)+'\','+idx+',\'r\',this.value)" style="flex:1;min-width:110px;'+inp+'">'
+       + '<input value="'+esc(w.v||'')+'" placeholder="US$" title="Valor" onchange="lavField(\''+esc(c)+'\','+idx+',\'v\',this.value)" style="width:70px;'+inp+';color:'+cl+';font-weight:600">'
+       + (dir?'<span style="font-size:10px;color:'+cl+'">'+dir+'</span>':'')
+       + '<input value="'+esc(w.o||'')+'" placeholder="observação" title="Observação" onchange="lavField(\''+esc(c)+'\','+idx+',\'o\',this.value)" style="flex:1;min-width:120px;'+inp+'">'
+       + '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button>'
+       + '</div>'; }).join('');
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
       + '<span style="font-size:11px;color:var(--text3)">'+ws.length+'x</span>'
@@ -9354,6 +9339,32 @@ function renderLavagem(){
       + _mwPlateVin(c)
       + rows + '</div>';
   }).join('');
+}
+function renderLavSummary(){
+  var d=getMW();
+  var cods=Object.keys(d).filter(function(c){return d[c].w && d[c].w.length;});
+  var totalLav=0, pago=0, porEquipe={};
+  cods.forEach(function(c){ var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{}; d[c].w.forEach(function(w){ totalLav++;
+    var dir=_washDir(w); var val=_money(w.v);
+    if(dir==='pago'){ pago+=val; }
+    else if(dir==='cobrado'){ var k; if(/equipe/i.test(w.r||'')) k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; else k=_a.team||w.r||'(sem equipe)'; porEquipe[k]=(porEquipe[k]||0)+val; }
+  }); });
+  var sum=document.getElementById('lav-summary'); if(!sum) return;
+  var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">Total de lavagens</div><div style="font-size:20px;font-weight:700;color:var(--text)">'+totalLav+'</div></div>';
+  if(pago>0) html+='<div style="background:#fcebeb;border:1px solid #f0b4b4;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#a32d2d;text-transform:uppercase">Pago a terceiros</div><div style="font-size:16px;font-weight:700;color:#a32d2d">US$ '+pago.toFixed(2)+'</div></div>';
+  Object.keys(porEquipe).sort().forEach(function(k){ if(porEquipe[k]>0) html+='<div style="background:#e1f5ee;border:1px solid #9bdcc6;border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:#0f6e56;text-transform:uppercase">Cobrado · '+esc(k)+'</div><div style="font-size:16px;font-weight:700;color:#0f6e56">US$ '+porEquipe[k].toFixed(2)+'</div></div>'; });
+  sum.innerHTML=html;
+}
+function lavField(code, idx, field, val){
+  var e=mwGet(code); if(!e.w||!e.w[idx]) return; e.w[idx][field]=(val||'').trim(); mwSet(code,e); renderLavSummary(); _refreshOpenItemPopup(code);
+}
+function lavTipoField(code, idx, val){
+  var e=mwGet(code); if(!e.w||!e.w[idx]) return; var w=e.w[idx]; w.t=val;
+  if(val==='Externa' && (!w.v||w.v==='')) w.v='75';
+  else if(val==='Re-lavagem' && (!w.v||w.v==='')) w.v='150';
+  else if(val==='Interna' && (w.v==='75'||w.v==='150')) w.v='';
+  if(!w.o||w.o===''){ w.o=_lavTipo(val==='Externa'?'2':(val==='Re-lavagem'?'3':'1')).o; }
+  mwSet(code,e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 
 // Troca de página por nome, sem depender de event.currentTarget (usado em botões internos)
