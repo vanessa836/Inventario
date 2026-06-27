@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-H';
+window.__BUILD = '2026-06-23-I';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9300,9 +9300,16 @@ function renderLavagem(){
   if(!cont) return;
   if(!cods.length){ cont.innerHTML='<p style="padding:16px;color:var(--text3);font-size:13px">Nenhuma lavagem registrada. Use o campo acima para registrar.</p>'; return; }
   cont.innerHTML=cods.map(function(c){ var ws=d[c].w;
-    var rows=ws.map(function(w,idx){ return '<div style="display:flex;gap:10px;align-items:center;font-size:12px;padding:3px 0">'
+    var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{};
+    var rows=ws.map(function(w,idx){
+      var who, atual='';
+      if(w.r && String(w.r).trim()){ who=esc(w.r); }
+      else if(_a.team){ var _cc=(typeof teamCode==='function'?teamCode(_a.team):''); who='Equipe '+esc(_a.team)+(_cc?' ('+esc(_cc)+')':''); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
+      else if(_a.leader){ who=esc(_a.leader); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
+      else { who='—'; }
+      return '<div style="display:flex;gap:10px;align-items:center;font-size:12px;padding:3px 0">'
       + '<span style="font-weight:600;color:var(--text2);min-width:130px">'+esc(w.d)+'</span>'
-      + '<span style="flex:1;color:var(--text2)">👤 <b>'+esc(w.r||'—')+'</b>'+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
+      + '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
       + '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button></div>'; }).join('');
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
