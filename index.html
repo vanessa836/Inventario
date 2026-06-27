@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-E';
+window.__BUILD = '2026-06-23-F';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9220,7 +9220,6 @@ function renderManutencao(){
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">'
       +   '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div></div>'
-      +   '<span style="font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+';padding:2px 9px;border-radius:7px">'+esc(m.status||'—')+'</span>'
       +   (m.local?'<span style="font-size:12px;color:var(--text3)">Resp.: '+esc(m.local)+'</span>':'')
       +   '<button class="icon-btn" style="font-size:11px;color:var(--blue);margin-left:auto" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
       +   '<button class="icon-btn" style="font-size:11px;color:var(--green)" onclick="manutRemove(\''+esc(c)+'\')">✓ Concluído</button>'
