@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-J';
+window.__BUILD = '2026-06-23-K';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9239,14 +9239,23 @@ function lavAddNew(){
   if(!(DB.assets||[]).some(function(a){return a.cod===code;}) && !(DB.inventory||[]).some(function(i){return i.cod===code;})){ alert('Código não encontrado: '+code); return; }
   lavAddDate(code); if(inp) inp.value='';
 }
+function _lavTipo(tin){
+  tin=(tin||'').trim();
+  if(tin==='2') return {t:'Externa', v:'75', o:'Lavada por terceiro (fora).'};
+  if(tin==='3') return {t:'Re-lavagem', v:'150', o:'Re-lavagem — devolvida sem conservar.'};
+  return {t:'Interna', v:'', o:'Lavada internamente (Yard Apopka).'};
+}
 function lavAddDate(code){
   var hoje=new Date(); var def=(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][hoje.getMonth()])+'/'+('0'+hoje.getDate()).slice(-2)+'/'+hoje.getFullYear();
   var data=prompt('Data da lavagem:', def); if(data===null) return;
+  var tin=prompt('Tipo da lavagem:\n  1 = Interna (Yard Apopka — sem custo)\n  2 = Externa (terceiro — US$ 75)\n  3 = Re-lavagem (devolvida sem conservar — US$ 150)\n\nDigite 1, 2 ou 3:', '1'); if(tin===null) return;
+  var tp=_lavTipo(tin);
   var asset=(DB.assets||[]).find(function(a){return a.cod===code;})||{};
-  var respDef = asset.team ? ('Equipe '+asset.team) : (asset.leader||'Yard');
-  var resp=prompt('Onde/com quem estava no dia (ex.: Yard, Lucas, Equipe '+(asset.team||'X')+'):', respDef); if(resp===null) return;
-  var valor=''; if(/equipe/i.test(resp)){ valor=prompt('Valor descontado da equipe (US$) — deixe vazio se não houver:', ''); if(valor===null) valor=''; }
-  var e=mwGet(code); e.w=e.w||[]; e.w.push({d:data.trim(), r:resp.trim(), v:(valor||'').trim()});
+  var respDef = asset.team ? ('Equipe '+asset.team) : (tp.t==='Interna'?'Yard Apopka':(asset.leader||'Yard'));
+  var resp=prompt('Onde/com quem estava no dia (ex.: Yard Apopka, Lucas, Equipe '+(asset.team||'X')+'):', respDef); if(resp===null) return;
+  var valor=prompt('Valor (US$) — deixe vazio se sem custo:', tp.v); if(valor===null) valor=tp.v;
+  var obs=prompt('Observação:', tp.o); if(obs===null) obs=tp.o;
+  var e=mwGet(code); e.w=e.w||[]; e.w.push({d:data.trim(), t:tp.t, r:resp.trim(), v:(valor||'').trim(), o:(obs||'').trim()});
   mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 function lavRemoveDate(code, idx){
@@ -9257,9 +9266,13 @@ function lavRemoveDate(code, idx){
 function lavEditDate(code, idx){
   var e=mwGet(code); if(!e.w||!e.w[idx]) return; var w=e.w[idx];
   var data=prompt('Data da lavagem:', w.d||''); if(data===null) return;
-  var resp=prompt('Onde/com quem estava no dia (ex.: Yard, Lucas, Equipe X):', w.r||''); if(resp===null) return;
-  var valor=''; if(/equipe/i.test(resp)){ valor=prompt('Valor descontado da equipe (US$) — deixe vazio se não houver:', w.v||''); if(valor===null) valor=w.v||''; }
-  e.w[idx]={d:data.trim(), r:resp.trim(), v:(valor||'').trim()};
+  var tdef = w.t==='Externa'?'2':(w.t==='Re-lavagem'?'3':'1');
+  var tin=prompt('Tipo da lavagem:\n  1 = Interna (Yard Apopka — sem custo)\n  2 = Externa (terceiro — US$ 75)\n  3 = Re-lavagem (devolvida sem conservar — US$ 150)\n\nDigite 1, 2 ou 3:', tdef); if(tin===null) return;
+  var tp=_lavTipo(tin);
+  var resp=prompt('Onde/com quem estava no dia (ex.: Yard Apopka, Lucas, Equipe X):', w.r||''); if(resp===null) return;
+  var valor=prompt('Valor (US$) — deixe vazio se sem custo:', (w.v!==undefined&&w.v!=='')?w.v:tp.v); if(valor===null) valor=w.v||'';
+  var obs=prompt('Observação:', w.o||tp.o); if(obs===null) obs=w.o||'';
+  e.w[idx]={d:data.trim(), t:tp.t, r:resp.trim(), v:(valor||'').trim(), o:(obs||'').trim()};
   mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
@@ -9286,7 +9299,7 @@ function mwSummaryHtml(cod){
   if(e.w && e.w.length){
     out+='<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px">'
       +'<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">🧼 Lavagens ('+e.w.length+')</div>'
-      +e.w.map(function(w){ return '<div style="color:var(--text2)">• '+esc(w.d)+' — '+esc(w.r||'—')+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</div>'; }).join('')
+      +e.w.map(function(w){ return '<div style="color:var(--text2)">• '+esc(w.d)+(w.t?' <span style="color:var(--text3)">['+esc(w.t)+']</span>':'')+' — '+esc(w.r||'—')+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+(w.o?' <span style="color:var(--text3)">· '+esc(w.o)+'</span>':'')+'</div>'; }).join('')
       +'</div>';
   }
   return out;
@@ -9315,11 +9328,18 @@ function renderLavagem(){
       else if(_a.team){ var _cc=(typeof teamCode==='function'?teamCode(_a.team):''); who='Equipe '+esc(_a.team)+(_cc?' ('+esc(_cc)+')':''); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
       else if(_a.leader){ who=esc(_a.leader); atual=' <span style="color:var(--text3);font-weight:400">(atual)</span>'; }
       else { who='—'; }
-      return '<div style="display:flex;gap:10px;align-items:center;font-size:12px;padding:3px 0">'
-      + '<span style="font-weight:600;color:var(--text2);min-width:130px">'+esc(w.d)+'</span>'
-      + '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
-      + '<button class="icon-btn" style="font-size:10px;color:var(--blue)" onclick="lavEditDate(\''+esc(c)+'\','+idx+')">✏ editar</button>'
-      + '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button></div>'; }).join('');
+      var tc = w.t==='Externa'?['#faeeda','#854f0b']:(w.t==='Re-lavagem'?['#fcebeb','#a32d2d']:['#e1f5ee','#0f6e56']);
+      var tipoBadge = w.t?'<span style="font-size:10px;font-weight:600;background:'+tc[0]+';color:'+tc[1]+';padding:1px 7px;border-radius:6px;white-space:nowrap">'+esc(w.t)+'</span>':'';
+      return '<div style="padding:5px 0;border-top:1px dashed var(--border)">'
+      + '<div style="display:flex;gap:10px;align-items:center;font-size:12px">'
+      +   '<span style="font-weight:600;color:var(--text2);min-width:110px">'+esc(w.d)+'</span>'
+      +   tipoBadge
+      +   '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
+      +   '<button class="icon-btn" style="font-size:10px;color:var(--blue)" onclick="lavEditDate(\''+esc(c)+'\','+idx+')">✏ editar</button>'
+      +   '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button>'
+      + '</div>'
+      + (w.o?'<div style="font-size:11px;color:var(--text3);margin:2px 0 0 110px">'+esc(w.o)+'</div>':'')
+      + '</div>'; }).join('');
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
       + '<span style="font-size:11px;color:var(--text3)">'+ws.length+'x</span>'
@@ -11695,7 +11715,7 @@ function exportLavagemExcel(){
   if(!_xlsxReady()) return;
   var d=getMW(); var det=[]; var porEq={};
   Object.keys(d).filter(function(c){return d[c].w&&d[c].w.length;}).sort().forEach(function(c){
-    d[c].w.forEach(function(w){ det.push({'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Placa':_mwPlate(c),'VIN':_mwVin(c),'Data':w.d||'','Responsável/Local':w.r||'','Valor (US$)':w.v||''});
+    d[c].w.forEach(function(w){ det.push({'Código':c,'Tipo veículo':_mwType(c),'Modelo':_mwModel(c),'Placa':_mwPlate(c),'VIN':_mwVin(c),'Data':w.d||'','Tipo lavagem':w.t||'','Responsável/Local':w.r||'','Valor (US$)':w.v||'','Observação':w.o||''});
       if(/equipe/i.test(w.r||'')){ var k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; porEq[k]=(porEq[k]||0)+_money(w.v); } });
   });
   var resumo=Object.keys(porEq).sort().map(function(k){return {'Equipe':k,'Total descontado (US$)':porEq[k].toFixed(2)};});
@@ -11715,8 +11735,8 @@ function printManutencao(){
 function printLavagem(){
   var d=getMW(); var cods=Object.keys(d).filter(function(c){return d[c].w&&d[c].w.length;}).sort();
   var html='<div class="report-header"><div class="report-title">Lavagem / Higienização</div><div style="font-size:12px;color:#666">'+new Date().toLocaleDateString('pt-BR')+'</div></div>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:2px solid #1a1d2e;text-align:left"><th style="padding:6px">Código</th><th>Tipo</th><th>Modelo</th><th>Data</th><th>Responsável/Local</th><th>Valor (US$)</th></tr></thead><tbody>';
-  cods.forEach(function(c){ d[c].w.forEach(function(w){ html+='<tr style="border-bottom:1px solid #ddd"><td style="padding:6px"><b>'+esc(c)+'</b></td><td>'+esc(_mwType(c))+'</td><td>'+esc(_mwModel(c))+'</td><td>'+esc(w.d||'')+'</td><td>'+esc(w.r||'')+'</td><td>'+esc(w.v||'')+'</td></tr>'; }); });
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:2px solid #1a1d2e;text-align:left"><th style="padding:6px">Código</th><th>Modelo</th><th>Data</th><th>Tipo</th><th>Responsável/Local</th><th>Valor (US$)</th><th>Observação</th></tr></thead><tbody>';
+  cods.forEach(function(c){ d[c].w.forEach(function(w){ html+='<tr style="border-bottom:1px solid #ddd"><td style="padding:6px"><b>'+esc(c)+'</b></td><td>'+esc(_mwModel(c))+'</td><td>'+esc(w.d||'')+'</td><td>'+esc(w.t||'')+'</td><td>'+esc(w.r||'')+'</td><td>'+esc(w.v||'')+'</td><td>'+esc(w.o||'')+'</td></tr>'; }); });
   html+='</tbody></table>';
   var r=document.getElementById('print-report'); r.innerHTML=html; r.style.display='block'; window.print(); setTimeout(function(){r.style.display='none';},1000);
 }
