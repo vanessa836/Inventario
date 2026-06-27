@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-I';
+window.__BUILD = '2026-06-23-J';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9254,6 +9254,14 @@ function lavRemoveDate(code, idx){
   if(!confirm('Remover esta lavagem de '+code+'?')) return;
   e.w.splice(idx,1); mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
+function lavEditDate(code, idx){
+  var e=mwGet(code); if(!e.w||!e.w[idx]) return; var w=e.w[idx];
+  var data=prompt('Data da lavagem:', w.d||''); if(data===null) return;
+  var resp=prompt('Onde/com quem estava no dia (ex.: Yard, Lucas, Equipe X):', w.r||''); if(resp===null) return;
+  var valor=''; if(/equipe/i.test(resp)){ valor=prompt('Valor descontado da equipe (US$) — deixe vazio se não houver:', w.v||''); if(valor===null) valor=w.v||''; }
+  e.w[idx]={d:data.trim(), r:resp.trim(), v:(valor||'').trim()};
+  mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
+}
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
 // Atualiza na hora o popup de detalhe aberto (Inventário ou Movimentação) após editar manut/lavagem
 function _refreshOpenItemPopup(cod){
@@ -9310,6 +9318,7 @@ function renderLavagem(){
       return '<div style="display:flex;gap:10px;align-items:center;font-size:12px;padding:3px 0">'
       + '<span style="font-weight:600;color:var(--text2);min-width:130px">'+esc(w.d)+'</span>'
       + '<span style="flex:1;color:var(--text2)">👤 <b>'+who+'</b>'+atual+(w.v?' <b style="color:#0f6e56">· US$ '+esc(w.v)+'</b>':'')+'</span>'
+      + '<button class="icon-btn" style="font-size:10px;color:var(--blue)" onclick="lavEditDate(\''+esc(c)+'\','+idx+')">✏ editar</button>'
       + '<button class="icon-btn" style="font-size:10px;color:var(--red)" onclick="lavRemoveDate(\''+esc(c)+'\','+idx+')">remover</button></div>'; }).join('');
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
