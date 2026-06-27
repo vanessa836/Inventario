@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-O';
+window.__BUILD = '2026-06-23-P';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9277,7 +9277,7 @@ function lavEditDate(code, idx){
 }
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
 // Direção do valor da lavagem: Externa = pago (a terceiro); Re-lavagem = cobrado (da equipe)
-function _washDir(w){ if(!w) return ''; if(w.t==='Externa') return 'pago'; if(w.t==='Re-lavagem') return 'cobrado'; if(_money(w.v)>0) return 'cobrado'; return ''; }
+function _washDir(w){ if(!w) return ''; if(w.dir==='pago'||w.dir==='cobrado') return w.dir; if(w.t==='Externa') return 'pago'; if(w.t==='Re-lavagem') return 'cobrado'; if(_money(w.v)>0) return 'cobrado'; return ''; }
 // Atualiza na hora o popup de detalhe aberto (Inventário ou Movimentação) após editar manut/lavagem
 function _refreshOpenItemPopup(cod){
   try{
@@ -9330,6 +9330,7 @@ function renderLavagem(){
          + '<select id="lav-t'+id+'" title="Tipo" onchange="lavTipoPreview(this,\''+esc(c)+'\','+idx+')" style="'+inp+'">'+opt('','— tipo')+opt('Interna','Interna')+opt('Externa','Externa $75')+opt('Re-lavagem','Re-lavagem $150')+'</select>'
          + '<input id="lav-r'+id+'" value="'+esc(w.r||'')+'" placeholder="'+(crewHint?esc(crewHint):'responsável/equipe')+'" title="Responsável / quem estava" style="flex:1;min-width:110px;'+inp+'">'
          + '<input id="lav-v'+id+'" value="'+esc(w.v||'')+'" placeholder="US$" title="Valor" style="width:70px;'+inp+'">'
+         + '<select id="lav-dir'+id+'" title="Pago ou Cobrado" style="'+inp+'">'+(function(){var dd=w.dir||'';function o(v,l){return '<option value="'+v+'"'+(dd===v?' selected':'')+'>'+l+'</option>';}return o('','—')+o('pago','Pago')+o('cobrado','Cobrado');})()+'</select>'
          + '<input id="lav-o'+id+'" value="'+esc(w.o||'')+'" placeholder="observação" title="Observação" style="flex:1;min-width:120px;'+inp+'">'
          + '<button class="icon-btn" style="font-size:11px;color:#0f6e56;border-color:#9bdcc6;font-weight:600" onclick="lavSaveEdit(\''+esc(c)+'\','+idx+')">💾 Salvar</button>'
          + '<button class="icon-btn" style="font-size:11px" onclick="lavCancelEdit()">Cancelar</button>'
@@ -9379,16 +9380,17 @@ function renderLavSummary(){
 function lavStartEdit(code, idx){ window._lavEdit=code+'#'+idx; renderLavagem(); }
 function lavCancelEdit(){ window._lavEdit=null; renderLavagem(); }
 function lavTipoPreview(sel, code, idx){
-  var v=sel.value; var vi=document.getElementById('lav-v-'+code+'-'+idx); var oi=document.getElementById('lav-o-'+code+'-'+idx);
+  var v=sel.value; var vi=document.getElementById('lav-v-'+code+'-'+idx); var oi=document.getElementById('lav-o-'+code+'-'+idx); var di=document.getElementById('lav-dir-'+code+'-'+idx);
   if(vi && (!vi.value || vi.value==='75' || vi.value==='150')){ vi.value = v==='Externa'?'75':(v==='Re-lavagem'?'150':''); }
   if(oi && !oi.value){ oi.value=_lavTipo(v==='Externa'?'2':(v==='Re-lavagem'?'3':'1')).o; }
+  if(di && !di.value){ di.value = v==='Externa'?'pago':(v==='Re-lavagem'?'cobrado':''); }
 }
 function lavSaveEdit(code, idx){
   var e=mwGet(code); if(!e.w||!e.w[idx]) return;
   var g=function(f){ var el=document.getElementById('lav-'+f+'-'+code+'-'+idx); return el?String(el.value).trim():''; };
   var t=g('t'), v=g('v');
   if(!v && t==='Externa') v='75'; if(!v && t==='Re-lavagem') v='150';
-  e.w[idx]={d:g('d'), t:t, r:g('r'), v:v, o:g('o')};
+  e.w[idx]={d:g('d'), t:t, r:g('r'), v:v, dir:g('dir'), o:g('o')};
   window._lavEdit=null; mwSet(code,e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 
