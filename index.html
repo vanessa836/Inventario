@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-C';
+window.__BUILD = '2026-06-23-D';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9191,11 +9191,11 @@ function manutEdit(code){
   var sit=prompt('Situação / serviço necessário:', m.sit||''); if(sit===null) return;
   var local=prompt('Responsável / Local (opcional, ex.: Alberto):', m.local||''); if(local===null) return;
   e.m={status:status.trim(), sit:sit.trim(), local:local.trim()};
-  mwSet(code, e); renderManutencao();
+  mwSet(code, e); renderManutencao(); _refreshOpenItemPopup(code);
 }
 function manutRemove(code){
   if(!confirm('Concluir a manutenção de '+code+'? (sai da lista de manutenção)')) return;
-  var e=mwGet(code); e.m=null; mwSet(code, e); renderManutencao();
+  var e=mwGet(code); e.m=null; mwSet(code, e); renderManutencao(); _refreshOpenItemPopup(code);
 }
 function _mwModel(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.model||a.model||''; }
 function _mwType(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.type||a.type||''; }
@@ -9238,14 +9238,23 @@ function lavAddDate(code){
   var resp=prompt('Onde/com quem estava no dia (ex.: Yard, Lucas, Equipe '+(asset.team||'X')+'):', respDef); if(resp===null) return;
   var valor=''; if(/equipe/i.test(resp)){ valor=prompt('Valor descontado da equipe (US$) — deixe vazio se não houver:', ''); if(valor===null) valor=''; }
   var e=mwGet(code); e.w=e.w||[]; e.w.push({d:data.trim(), r:resp.trim(), v:(valor||'').trim()});
-  mwSet(code, e); renderLavagem();
+  mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 function lavRemoveDate(code, idx){
   var e=mwGet(code); if(!e.w||!e.w[idx]) return;
   if(!confirm('Remover esta lavagem de '+code+'?')) return;
-  e.w.splice(idx,1); mwSet(code, e); renderLavagem();
+  e.w.splice(idx,1); mwSet(code, e); renderLavagem(); _refreshOpenItemPopup(code);
 }
 function _money(v){ var n=parseFloat(String(v||'').replace(/[^0-9.,-]/g,'').replace(',','.')); return isNaN(n)?0:n; }
+// Atualiza na hora o popup de detalhe aberto (Inventário ou Movimentação) após editar manut/lavagem
+function _refreshOpenItemPopup(cod){
+  try{
+    var inv=document.getElementById('inv-popup-bg');
+    if(inv && inv.style.display==='block' && typeof openInvDetail==='function'){ openInvDetail(cod); return; }
+    var modal=document.getElementById('modal-bg');
+    if(modal && modal.classList.contains('open') && typeof openAssetDetailByCod==='function'){ openAssetDetailByCod(cod); return; }
+  }catch(e){}
+}
 // Resumo de manutenção + lavagem para o popup de detalhe do item
 function mwSummaryHtml(cod){
   var e=mwGet(cod); var out='';
