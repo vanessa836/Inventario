@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-F';
+window.__BUILD = '2026-06-23-G';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9203,6 +9203,9 @@ function manutRemove(code){
 }
 function _mwModel(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.model||a.model||''; }
 function _mwType(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; return i.type||a.type||''; }
+function _mwPlate(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; var p=i.plate||a.plate||''; return (p&&p!=='FALTA')?p:''; }
+function _mwVin(cod){ var i=(DB.inventory||[]).find(function(x){return x.cod===cod;})||{}; var a=(DB.assets||[]).find(function(x){return x.cod===cod;})||{}; var v=i.vin||a.vin||''; return (v&&v!=='FALTA')?v:''; }
+function _mwPlateVin(cod){ var p=_mwPlate(cod), v=_mwVin(cod); var parts=[]; if(p)parts.push('Placa: '+esc(p)); if(v)parts.push('VIN: '+esc(v)); return parts.length?'<div style="font-size:10px;color:var(--text3);font-family:monospace;margin-top:1px">'+parts.join(' · ')+'</div>':''; }
 function _statusColor(st){ var s=(st||'').toLowerCase();
   if(s.indexOf('funcion')>=0||s.indexOf('pronta')>=0) return ['#e1f5ee','#0f6e56'];
   if(s.indexOf('desmont')>=0||s.indexOf('refazer')>=0||s.indexOf('motor')>=0) return ['#fcebeb','#a32d2d'];
@@ -9219,7 +9222,7 @@ function renderManutencao(){
   cont.innerHTML=cods.map(function(c){ var m=d[c].m; var col=_statusColor(m.status);
     return '<div style="padding:11px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">'
-      +   '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div></div>'
+      +   '<div style="min-width:150px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+'</span><div style="font-size:12px;color:var(--text2)">'+esc(_mwModel(c))+'</div>'+_mwPlateVin(c)+'</div>'
       +   (m.local?'<span style="font-size:12px;color:var(--text3)">Resp.: '+esc(m.local)+'</span>':'')
       +   '<button class="icon-btn" style="font-size:11px;color:var(--blue);margin-left:auto" onclick="manutEdit(\''+esc(c)+'\')">✏ Editar</button>'
       +   '<button class="icon-btn" style="font-size:11px;color:var(--green)" onclick="manutRemove(\''+esc(c)+'\')">✓ Concluído</button>'
@@ -9305,6 +9308,7 @@ function renderLavagem(){
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px"><span style="font-family:monospace;font-weight:700;color:var(--text)">'+esc(c)+'</span> <span style="font-size:11px;color:var(--text3)">'+esc(_mwType(c))+' · '+esc(_mwModel(c))+'</span>'
       + '<span style="font-size:11px;color:var(--text3)">'+ws.length+'x</span>'
       + '<button class="icon-btn" style="font-size:11px;margin-left:auto;color:#0f6e56;border-color:#9bdcc6" onclick="lavAddDate(\''+esc(c)+'\')">+ nova lavagem</button></div>'
+      + _mwPlateVin(c)
       + rows + '</div>';
   }).join('');
 }
@@ -11667,7 +11671,7 @@ function exportEquipesExcel(){
 function exportManutencaoExcel(){
   if(!_xlsxReady()) return;
   var d=getMW();
-  var rows=Object.keys(d).filter(function(c){return d[c].m&&(d[c].m.status||d[c].m.sit||d[c].m.local);}).sort().map(function(c){var m=d[c].m;return {'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Status':m.status||'','Situação / Serviço':m.sit||'','Responsável/Local':m.local||''};});
+  var rows=Object.keys(d).filter(function(c){return d[c].m&&(d[c].m.status||d[c].m.sit||d[c].m.local);}).sort().map(function(c){var m=d[c].m;return {'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Placa':_mwPlate(c),'VIN':_mwVin(c),'Status':m.status||'','Situação / Serviço':m.sit||'','Responsável/Local':m.local||''};});
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Manutenção');
   XLSX.writeFile(wb,'Fleet_Manutencao_'+_xlsxDate()+'.xlsx');
 }
@@ -11675,7 +11679,7 @@ function exportLavagemExcel(){
   if(!_xlsxReady()) return;
   var d=getMW(); var det=[]; var porEq={};
   Object.keys(d).filter(function(c){return d[c].w&&d[c].w.length;}).sort().forEach(function(c){
-    d[c].w.forEach(function(w){ det.push({'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Data':w.d||'','Responsável/Local':w.r||'','Valor (US$)':w.v||''});
+    d[c].w.forEach(function(w){ det.push({'Código':c,'Tipo':_mwType(c),'Modelo':_mwModel(c),'Placa':_mwPlate(c),'VIN':_mwVin(c),'Data':w.d||'','Responsável/Local':w.r||'','Valor (US$)':w.v||''});
       if(/equipe/i.test(w.r||'')){ var k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; porEq[k]=(porEq[k]||0)+_money(w.v); } });
   });
   var resumo=Object.keys(porEq).sort().map(function(k){return {'Equipe':k,'Total descontado (US$)':porEq[k].toFixed(2)};});
