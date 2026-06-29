@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-Q';
+window.__BUILD = '2026-06-23-R';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10069,9 +10069,15 @@ function renderTeams() {
     const sup = totalItems > 0 ? t.leader : (_ti.supervisor || t.leader || '—');
     const noteLine = _ti.note ? '<div style="font-size:11px;color:var(--amber);margin-top:2px">' + esc(_ti.note) + '</div>' : '';
     const emptyLine = totalItems === 0 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px">Sem equipamento</div>' : '';
+    var _locC={}; t.allAssets.forEach(function(a){ if(a.city||a.state){ var k=(a.city||'')+'|'+(a.state||''); _locC[k]=(_locC[k]||0)+1; } });
+    var _loc='',_best=0; Object.keys(_locC).forEach(function(k){ if(_locC[k]>_best){_best=_locC[k];_loc=k;} });
+    var _locStr=_loc?_loc.split('|').filter(Boolean).join(', '):'';
+    var _multi=Object.keys(_locC).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_locC).length-1)+'</span>':'';
+    const locLine = _locStr ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">📍 ' + esc(_locStr) + _multi + '</div>' : '';
     return '<div class="team-card' + (isRevisar(t.team)?' revisar-hl':'') + '" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
       + '<div class="team-card-name">' + esc(t.team) + codeBadge + geralBadge + '</div>'
       + '<div class="team-card-leader">Supervisor: <span>' + esc(sup) + '</span></div>'
+      + locLine
       + noteLine
       + '<div class="team-card-pills">'
       + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
@@ -10097,8 +10103,13 @@ function renderTeams() {
     supHtml = '<div style="grid-column:1/-1;margin:18px 0 4px;font-size:13px;font-weight:600;color:var(--text2);border-top:1px solid var(--border);padding-top:14px">Supervisores (equipamento direto)</div>'
       + supNames.map(function(s){
           var types = {}; supMap[s].forEach(function(a){ types[a.type] = (types[a.type]||0)+1; });
+          var _lc={}; supMap[s].forEach(function(a){ if(a.city||a.state){var k=(a.city||'')+'|'+(a.state||'');_lc[k]=(_lc[k]||0)+1;} });
+          var _l='',_b=0; Object.keys(_lc).forEach(function(k){if(_lc[k]>_b){_b=_lc[k];_l=k;}});
+          var _ls=_l?_l.split('|').filter(Boolean).join(', '):'';
+          var supLoc=_ls?'<div style="font-size:11px;color:var(--text2);margin-top:2px">📍 '+esc(_ls)+(Object.keys(_lc).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_lc).length-1)+'</span>':'')+'</div>':'';
           return '<div class="team-card' + (isRevisar(s)?' revisar-hl':'') + '" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
             + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
+            + supLoc
             + '<div class="team-card-pills">'
             + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
             + '</div></div>';
