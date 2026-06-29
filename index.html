@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-R';
+window.__BUILD = '2026-06-23-S';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -120,7 +120,7 @@ tr.row-pend:hover td{background:#fef9ec}
 .alert-item.red{border-left-color:var(--red)}
 /* TEAM CARDS */
 .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
+.team-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s;min-height:128px;display:flex;flex-direction:column}
 .team-card:hover{border-color:var(--blue);box-shadow:0 3px 12px rgba(37,99,235,.1);transform:translateY(-1px)}
 .team-card.revisar-hl{background:#fff1f0;border:1.5px solid #ff4d4f;box-shadow:0 0 0 2px rgba(255,77,79,.12)}
 .team-card.revisar-hl .team-card-name{color:#cf1322}
@@ -10073,6 +10073,7 @@ function renderTeams() {
     var _loc='',_best=0; Object.keys(_locC).forEach(function(k){ if(_locC[k]>_best){_best=_locC[k];_loc=k;} });
     var _locStr=_loc?_loc.split('|').filter(Boolean).join(', '):'';
     var _multi=Object.keys(_locC).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_locC).length-1)+'</span>':'';
+    if(!_locStr && (typeof TEAM_LOC!=='undefined') && TEAM_LOC[t.team]) _locStr=TEAM_LOC[t.team];
     const locLine = _locStr ? '<div style="font-size:11px;color:var(--text2);margin-top:2px">📍 ' + esc(_locStr) + _multi + '</div>' : '';
     return '<div class="team-card' + (isRevisar(t.team)?' revisar-hl':'') + '" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
       + '<div class="team-card-name">' + esc(t.team) + codeBadge + geralBadge + '</div>'
@@ -11672,6 +11673,8 @@ var TEAM_CODES = {
   'Renan - SBG':'SUB-19', 'Ruiz Leiva':'SUB-36', 'Saturnino':'HH-04', 'Sidney':'HH-03',
   'Tadeu':'PCS-39', 'Team Elier':'PC-24', 'Volt':'PCS-43', 'Wladimir':'PCS-24'
 };
+// Localização de equipes SEM equipamento (do schedule) — usada quando não há item pra derivar
+var TEAM_LOC = { 'Fherdin':'Chesnee, SC', 'Hysmael':'Chesnee, SC' };
 function teamReg(){ DB.teams = DB.teams || []; return DB.teams; }
 function teamEntry(name){ return teamReg().find(function(t){ return t.name === name; }); }
 function teamCode(name){ var e = teamEntry(name); if (e && e.code) return e.code; return TEAM_CODES[name] || ''; }
