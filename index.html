@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-23-T';
+window.__BUILD = '2026-06-30-SUP';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10109,8 +10109,10 @@ function renderTeams() {
           var _l='',_b=0; Object.keys(_lc).forEach(function(k){if(_lc[k]>_b){_b=_lc[k];_l=k;}});
           var _ls=_l?_l.split('|').filter(Boolean).join(', '):'';
           var supLoc=_ls?'<div style="font-size:11px;color:var(--text2);margin:2px 0 10px">📍 '+esc(_ls)+(Object.keys(_lc).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_lc).length-1)+'</span>':'')+'</div>':'';
+          if(!supLoc) supLoc='<div style="font-size:11px;color:var(--text2);margin:2px 0 10px">&nbsp;</div>';
           return '<div class="team-card' + (isRevisar(s)?' revisar-hl':'') + '" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
             + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
+            + '<div class="team-card-leader">Equipamento direto</div>'
             + supLoc
             + '<div class="team-card-pills">'
             + Object.entries(types).map(function(e){ return '<span class="asset-pill">' + e[0] + ': ' + e[1] + '</span>'; }).join('')
