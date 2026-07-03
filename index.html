@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-30-SUP';
+window.__BUILD = '2026-06-30-SORT';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9214,7 +9214,7 @@ function renderManutencao(){
   var d=getMW();
   var dl=document.getElementById('manut-add-list');
   if(dl){ dl.innerHTML=(DB.inventory||[]).filter(function(i){return (i.type||'')!=='SEM EQUIPAMENTO'&&i.cod!==MW_REC;}).map(function(i){return '<option value="'+esc(i.cod)+'">'+esc(i.cod)+' — '+esc(i.model||'')+'</option>';}).join(''); }
-  var cods=Object.keys(d).filter(function(c){return d[c].m && (d[c].m.status||d[c].m.sit||d[c].m.local);}).sort();
+  var cods=Object.keys(d).filter(function(c){return d[c].m && (d[c].m.status||d[c].m.sit||d[c].m.local);}).sort(function(a,b){return a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'});});
   var cont=document.getElementById('manut-list'); var cnt=document.getElementById('manut-count');
   if(cnt) cnt.textContent=cods.length+' itens';
   if(!cont) return;
@@ -9305,7 +9305,7 @@ function renderLavagem(){
   var d=getMW();
   var dl=document.getElementById('lav-add-list');
   if(dl){ dl.innerHTML=(DB.inventory||[]).filter(function(i){return (i.type||'')!=='SEM EQUIPAMENTO'&&i.cod!==MW_REC;}).map(function(i){return '<option value="'+esc(i.cod)+'">'+esc(i.cod)+' — '+esc(i.model||'')+'</option>';}).join(''); }
-  var cods=Object.keys(d).filter(function(c){return d[c].w && d[c].w.length;}).sort();
+  var cods=Object.keys(d).filter(function(c){return d[c].w && d[c].w.length;}).sort(function(a,b){return a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'});});
   var cont=document.getElementById('lav-list'); var cnt=document.getElementById('lav-count');
   if(cnt) cnt.textContent=cods.length+' itens';
   renderLavSummary();
@@ -9874,6 +9874,7 @@ function renderAssets() {
     return true;
   });
 
+  rows.sort(function(a,b){return (a.cod||'').localeCompare((b.cod||''), undefined, {numeric:true, sensitivity:'base'});});
   document.getElementById('asset-count').textContent = rows.length + ' itens';
   document.getElementById('asset-tbody').innerHTML = rows.map((a, i) => `
     <tr class="${rowClass(a.status)}">
@@ -9912,6 +9913,7 @@ function renderInventory() {
     return true;
   });
 
+  rows.sort(function(a,b){return (a.cod||'').localeCompare((b.cod||''), undefined, {numeric:true, sensitivity:'base'});});
   document.getElementById('inv-count').textContent = rows.length + ' itens';
   document.getElementById('inv-tbody').innerHTML = rows.map(i => `
     <tr onclick="openInvDetail('${esc(i.cod)}')" style="cursor:pointer">
@@ -11487,6 +11489,7 @@ function renderCadastros() {
     return true;
   });
 
+  rows.sort(function(a,b){return (a.cod||'').localeCompare((b.cod||''), undefined, {numeric:true, sensitivity:'base'});});
   const countEl = document.getElementById('cad-count');
   if (countEl) countEl.textContent = rows.length + ' itens';
 
