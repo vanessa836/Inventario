@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-30-SORT';
+window.__BUILD = '2026-06-30-COBR';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9363,7 +9363,7 @@ function renderLavSummary(){
   cods.forEach(function(c){ var _a=(DB.assets||[]).find(function(x){return x.cod===c;})||{}; d[c].w.forEach(function(w){ totalLav++;
     var dir=_washDir(w); var val=_money(w.v);
     if(dir==='pago'){ pago+=val; }
-    else if(dir==='cobrado'){ var k; if(/equipe/i.test(w.r||'')) k=w.r.replace(/^equipe\s*/i,'').trim()||w.r; else k=_a.team||w.r||'(sem equipe)'; porEquipe[k]=(porEquipe[k]||0)+val; }
+    else if(dir==='cobrado'){ var rr=(w.r||'').replace(/^equipe\s*/i,'').trim(); var k=rr||_a.team||'(sem equipe)'; porEquipe[k]=(porEquipe[k]||0)+val; }
   }); });
   var sum=document.getElementById('lav-summary'); if(!sum) return;
   var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase">Total de lavagens</div><div style="font-size:20px;font-weight:700;color:var(--text)">'+totalLav+'</div></div>';
