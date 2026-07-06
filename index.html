@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-30-COBR';
+window.__BUILD = '2026-06-30-ALFA';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -10038,7 +10038,7 @@ function renderTeams() {
     t.allAssets = t.assets.concat(t.geral);
   });
 
-  let teams = Object.values(teamMap).sort((a,b) => a.team.localeCompare(b.team));
+  let teams = Object.values(teamMap).sort((a,b) => String(a.team).localeCompare(String(b.team),'pt',{numeric:true,sensitivity:'base'}));
   const selectedTeamsFilter = getSelectedTeams ? getSelectedTeams() : [];
   if (selectedTeamsFilter.length > 0) {
     teams = teams.filter(t => selectedTeamsFilter.includes(t.team));
@@ -11525,7 +11525,7 @@ function renderCadastros() {
 
 function renderPessoas() {
   // Supervisors
-  const supervisors = [...new Set([...DB.assets.map(a => a.leader), ...(DB.extraSupervisors||[])].filter(Boolean))].sort();
+  const supervisors = [...new Set([...DB.assets.map(a => a.leader), ...(DB.extraSupervisors||[])].filter(Boolean))].sort(function(a,b){return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});});
   const supList = document.getElementById('supervisor-list');
   if (supList) {
     supList.innerHTML = '';
@@ -11549,7 +11549,7 @@ function renderPessoas() {
   }
 
   // Teams
-  const teams = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[]), ...((DB.teams||[]).map(function(t){return t.name;}))].filter(Boolean))].sort();
+  const teams = [...new Set([...DB.assets.map(a => a.team), ...(DB.extraTeams||[]), ...((DB.teams||[]).map(function(t){return t.name;}))].filter(Boolean))].sort(function(a,b){return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});});
   const teamList = document.getElementById('team-list');
   if (teamList) {
     teamList.innerHTML = '';
@@ -11575,7 +11575,7 @@ function renderPessoas() {
 
   // Drivers
   const _badDriver = ['FALTA','N/A','NA','SEM','-','—',''];
-  const drivers = [...new Set([...DB.assets.map(a => a.driver), ...(DB.extraDrivers||[])].filter(Boolean).filter(function(d){ return _badDriver.indexOf(String(d).trim().toUpperCase()) < 0; }))].sort();
+  const drivers = [...new Set([...DB.assets.map(a => a.driver), ...(DB.extraDrivers||[])].filter(Boolean).filter(function(d){ return _badDriver.indexOf(String(d).trim().toUpperCase()) < 0; }))].sort(function(a,b){return String(a).localeCompare(String(b),'pt',{numeric:true,sensitivity:'base'});});
   const driverList = document.getElementById('driver-list');
   if (driverList) {
     driverList.innerHTML = '';
