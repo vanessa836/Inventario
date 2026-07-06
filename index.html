@@ -5,7 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* AUTO-ATUALIZADOR: garante que sempre carregue a versão mais nova (vence o cache do navegador) */
-window.__BUILD = '2026-06-30-ALFA';
+window.__BUILD = '2026-06-30-LOCEDIT';
 (function(){
   try {
     if (location.search.indexOf('fresh=') > -1) return; // já recarregado fresco
@@ -9988,6 +9988,31 @@ function editHistory(idx){
 
 // TEAMS
 function isRevisar(n){ return /revisar/i.test(n||''); }
+// Editar cidade/estado de TODOS os itens de uma equipe (reflete em cadastro/inventário/movimentação; sem histórico)
+function _applyLoc(items, label){
+  var lc={}; items.forEach(function(a){var k=(a.city||'')+'|'+(a.state||'');lc[k]=(lc[k]||0)+1;});
+  var best='',bn=0; Object.keys(lc).forEach(function(k){if(lc[k]>bn){bn=lc[k];best=k;}});
+  var p=best.split('|'); var curCity=p[0]||'', curState=p[1]||'';
+  var inp=prompt('Nova cidade e estado para '+label+' (ex: Orlando, FL):', curCity+(curState?', '+curState:''));
+  if(inp===null) return;
+  inp=String(inp).trim(); if(!inp){ return; }
+  var parts=inp.split(','); var city=(parts[0]||'').trim(); var state=(parts[1]||'').trim().toUpperCase();
+  if(!city){ alert('Cidade inválida.'); return; }
+  items.forEach(function(a){ a.city=city; if(state) a.state=state; });
+  saveData(); try{ renderTeams(); }catch(e){}
+  alert(items.length+' item(ns) de '+label+' atualizado(s) para '+city+(state?', '+state:'')+'.');
+}
+function editTeamLoc(team){
+  var items=(DB.assets||[]).filter(function(a){return a.team===team && (a.type||'')!=='SEM EQUIPAMENTO';});
+  if(!items.length){ alert('A equipe "'+team+'" não tem itens para atualizar o local.'); return; }
+  _applyLoc(items, 'equipe "'+team+'"');
+}
+function editSupLoc(sup){
+  var items=(DB.assets||[]).filter(function(a){return (!a.team||!String(a.team).trim()) && a.leader===sup && (a.type||'')!=='SEM EQUIPAMENTO';});
+  if(!items.length){ alert('O supervisor "'+sup+'" não tem itens diretos para atualizar o local.'); return; }
+  _applyLoc(items, 'supervisor "'+sup+'"');
+}
+
 function renderTeams() {
   const q = (document.getElementById('teams-search')?.value || '').toLowerCase();
 
@@ -10077,7 +10102,8 @@ function renderTeams() {
     var _multi=Object.keys(_locC).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_locC).length-1)+'</span>':'';
     if(!_locStr && (typeof TEAM_LOC!=='undefined') && TEAM_LOC[t.team]) _locStr=TEAM_LOC[t.team];
     var _allLocs=Object.keys(_locC).map(function(k){return k.split('|').filter(Boolean).join(', ');}).filter(Boolean).join(' · ');
-    const locLine = _locStr ? '<div title="'+esc(_allLocs||_locStr)+'" style="font-size:11px;color:var(--text2);margin:2px 0 10px">📍 ' + esc(_locStr) + _multi + '</div>' : '';
+    var _locPen = '<span onclick="event.stopPropagation();editTeamLoc(\''+esc(t.team).replace(/'/g,"\\'")+'\')" title="Editar cidade/estado" style="cursor:pointer;color:var(--blue);font-size:11px;margin-left:6px">✏</span>';
+    const locLine = '<div title="'+esc(_allLocs||_locStr)+'" style="font-size:11px;color:var(--text2);margin:2px 0 10px">📍 ' + (_locStr ? esc(_locStr) + _multi : '<span style="color:var(--text3)">definir local</span>') + _locPen + '</div>';
     return '<div class="team-card' + (isRevisar(t.team)?' revisar-hl':'') + '" onclick="openTeamPopup(\'' + esc(t.team) + '\')">'
       + '<div class="team-card-name">' + esc(t.team) + codeBadge + geralBadge + '</div>'
       + '<div class="team-card-leader">Supervisor: <span>' + esc(sup) + '</span></div>'
@@ -10110,8 +10136,8 @@ function renderTeams() {
           var _lc={}; supMap[s].forEach(function(a){ if(a.city||a.state){var k=(a.city||'')+'|'+(a.state||'');_lc[k]=(_lc[k]||0)+1;} });
           var _l='',_b=0; Object.keys(_lc).forEach(function(k){if(_lc[k]>_b){_b=_lc[k];_l=k;}});
           var _ls=_l?_l.split('|').filter(Boolean).join(', '):'';
-          var supLoc=_ls?'<div style="font-size:11px;color:var(--text2);margin:2px 0 10px">📍 '+esc(_ls)+(Object.keys(_lc).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_lc).length-1)+'</span>':'')+'</div>':'';
-          if(!supLoc) supLoc='<div style="font-size:11px;color:var(--text2);margin:2px 0 10px">&nbsp;</div>';
+          var _supPen='<span onclick="event.stopPropagation();editSupLoc(\''+esc(s).replace(/'/g,"\\'")+'\')" title="Editar cidade/estado" style="cursor:pointer;color:var(--blue);font-size:11px;margin-left:6px">✏</span>';
+          var supLoc='<div style="font-size:11px;color:var(--text2);margin:2px 0 10px">📍 '+(_ls?esc(_ls)+(Object.keys(_lc).length>1?' <span style="color:var(--text3)">+'+(Object.keys(_lc).length-1)+'</span>':''):'<span style="color:var(--text3)">definir local</span>')+_supPen+'</div>';
           return '<div class="team-card' + (isRevisar(s)?' revisar-hl':'') + '" onclick="openSupervisorPopup(\'' + esc(s).replace(/'/g,"\\'") + '\')">'
             + '<div class="team-card-name">' + esc(s) + ' <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:1px 7px;border-radius:10px;font-weight:600">Supervisor</span></div>'
             + '<div class="team-card-leader">Equipamento direto</div>'
